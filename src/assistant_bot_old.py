@@ -4,7 +4,7 @@ from collections import UserDict
 from colorama import Fore, Style, init
 from datetime import datetime, timedelta
 import pickle
-
+import re
 
 class Field:
     """Base class for all fields in a record.
@@ -60,14 +60,34 @@ class Phone(Field):
     Raises
     ------
     ValueError
-        If the phone number is not 10 digits long.
+        Phone number must be 10-15 digits and may start with +.
     """
 
     def __init__(self, value: str):
-        if not value.isdigit() or len(value.strip()) != 10:
-            raise ValueError("Phone number must be 10 digits")
+        phone_pattern = re.compile(r"^\+?[1-9]\d{9,14}$")
+        if not phone_pattern.match(value):
+            raise ValueError("Phone number must be 10-15 digits and may start with +")
         super().__init__(value)
 
+class Email(Field):
+    """Class for storing and validating email addresses. Inherits from Field.
+
+    Parameters
+    ----------
+    value : str
+        The email address.
+
+    Raises
+    ------
+    ValueError
+        If the email format is incorrect.
+    """
+    EMAIL_REGEX = re.compile(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
+
+    def __init__(self, value: str):
+        if not self.EMAIL_REGEX.match(value):
+            raise ValueError("Invalid email format")
+        super().__init__(value)
 
 class Birthday(Field):
     """Class for storing and validating birthdays. Inherits from Field.
@@ -104,6 +124,7 @@ class Record:
         self.name = name
         self.phones = []
         self.birthday = None
+        self.email = None
 
     def add_phone(self, phone: Phone):
         """Add a phone number to the contact."""
@@ -120,6 +141,14 @@ class Record:
         """Edit an existing phone number in the contact."""
         self.remove_phone(old_phone)
         self.add_phone(new_phone)
+
+    def add_email(self, email: Email):
+        """Add an email address to the contact."""
+        self.email = email
+
+    def edit_email(self, email: Email):
+        """Edit the email address of the contact."""
+        self.email = email
 
     def add_birthday(self, birthday: Birthday):
         """Add a birthday to the contact."""
@@ -324,6 +353,9 @@ def change_contact(contacts: AddressBook, *args: str) -> None:
     name, new_phone = args
     record = contacts.find(Name(name))
     if record:
+        phone_pattern = re.compile(r"^\+?[1-9]\d{9,14}$")
+        if not phone_pattern.match(new_phone):
+            raise ValueError("Phone number must be 10-15 digits and may start with +")
         current_phone = record.phones[0].value if record.phones else None
         if new_phone == current_phone:
             print(
@@ -377,6 +409,35 @@ def add_phone_to_contact(address_book: AddressBook, *args: str) -> None:
     else:
         raise KeyError(f"Name '{name}' not found.")
 
+@input_error
+def add_email_to_contact(contacts: AddressBook, *args: str) -> None:
+    """Add an email to a contact."""
+    if len(args) != 2:
+        raise ValueError("Usage: add-email [name] [email]")
+    name, email = args
+    record = contacts.find(Name(name))
+    if record:
+        record.add_email(Email(email))
+        print(
+            f"{Fore.GREEN}Email for {Fore.CYAN}{name}{Fore.GREEN} set to {Fore.CYAN}{email}{Style.RESET_ALL}"
+        )
+    else:
+        raise KeyError(f"Name '{name}' not found.")
+
+@input_error
+def edit_email_of_contact(contacts: AddressBook, *args: str) -> None:
+    """Edit the email of a contact."""
+    if len(args) != 2:
+        raise ValueError("Usage: edit-email [name] [new email]")
+    name, email = args
+    record = contacts.find(Name(name))
+    if record:
+        record.edit_email(Email(email))
+        print(
+            f"{Fore.GREEN}Email for {Fore.CYAN}{name}{Fore.GREEN} changed to {Fore.CYAN}{email}{Style.RESET_ALL}"
+        )
+    else:
+        raise KeyError(f"Name '{name}' not found.")
 
 @input_error
 def show_all_contacts(contacts: AddressBook) -> None:
@@ -482,6 +543,10 @@ def help_command():
     print(
         f"add-phone [name] [phone number]{Fore.GREEN} - Adds an additional phone to a contact.{Style.RESET_ALL}"
     )
+    print(f"add-email [name] [email]{Fore.GREEN} - Adds an email to a contact.{Style.RESET_ALL}"
+    )
+    print(f"edit-email [name] [new email]{Fore.GREEN} - Edits the email of a contact.{Style.RESET_ALL}"
+    )
     print(f"all{Fore.GREEN} - Shows all contacts.{Style.RESET_ALL}")
     print(
         f"add-birthday [name] [birthday]{Fore.GREEN} - Adds a birthday to a contact.{Style.RESET_ALL}"
@@ -513,6 +578,8 @@ def main():
         "change": lambda args: change_contact(address_book, *args),
         "phone": lambda args: show_phone(address_book, *args),
         "add-phone": lambda args: add_phone_to_contact(address_book, *args),
+        "add-email": lambda args: add_email_to_contact(address_book, *args),
+        "edit-email": lambda args: edit_email_of_contact(address_book, *args),
         "all": lambda _: show_all_contacts(address_book),
         "add-birthday": lambda args: add_birthday(address_book, *args),
         "show-birthday": lambda args: show_birthday(address_book, *args),
