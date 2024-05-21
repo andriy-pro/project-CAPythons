@@ -128,8 +128,12 @@ class Record:
     def __str__(self):
         """Return the string representation of the contact."""
         phones = "; ".join([str(phone) for phone in self.phones])
-        birthday = f", birthday: {self.birthday}" if self.birthday else ""
-        return f"Contact name: {self.name}, phones: {phones}{birthday}"
+        birthday = (
+            f"{Fore.GREEN}, birthday: {Fore.CYAN}{self.birthday}{Style.RESET_ALL}"
+            if self.birthday
+            else ""
+        )
+        return f"{Fore.GREEN}Contact name: {Fore.CYAN}{self.name}{Fore.GREEN}, phones: {Fore.CYAN}{phones}{birthday}{Style.RESET_ALL}"
 
 
 class AddressBook(UserDict):
@@ -359,6 +363,22 @@ def show_phone(contacts: AddressBook, *args: str) -> None:
 
 
 @input_error
+def add_phone_to_contact(address_book: AddressBook, *args: str) -> None:
+    """Add an additional phone to a contact."""
+    if len(args) != 2:
+        raise ValueError("Usage: add-phone [name] [phone number]")
+    name, phone = args
+    record = address_book.find(Name(name))
+    if record:
+        record.add_phone(Phone(phone))
+        print(
+            f"{Fore.GREEN}For user {Fore.CYAN}{name}{Fore.GREEN} added an additional phone number: {Fore.CYAN}{phone}{Style.RESET_ALL}"
+        )
+    else:
+        raise KeyError(f"Name '{name}' not found.")
+
+
+@input_error
 def show_all_contacts(contacts: AddressBook) -> None:
     """Show all contacts.
 
@@ -375,7 +395,7 @@ def show_all_contacts(contacts: AddressBook) -> None:
 
 
 @input_error
-def add_birthday(args: List[str], address_book: AddressBook):
+def add_birthday(address_book: AddressBook, *args: str) -> None:
     """Add a birthday to a contact."""
     if len(args) != 2:
         raise ValueError("Usage: add-birthday [name] [birthday in DD.MM.YYYY]")
@@ -391,7 +411,7 @@ def add_birthday(args: List[str], address_book: AddressBook):
 
 
 @input_error
-def show_birthday(args: List[str], address_book: AddressBook):
+def show_birthday(address_book: AddressBook, *args: str) -> None:
     """Show the birthday of a contact."""
     if len(args) != 1:
         raise ValueError("Usage: show-birthday [name]")
@@ -400,7 +420,7 @@ def show_birthday(args: List[str], address_book: AddressBook):
     if record:
         if record.birthday:
             print(
-                f"{Fore.GREEN}Birthday of {Fore.CYAN}{name}{Fore.GREEN}: {Fore.CYAN}{record.birthday.value}{Style.RESET_ALL}"
+                f"{Fore.GREEN}Birthday of {Fore.CYAN}{record.name.value}{Fore.GREEN}: {Fore.CYAN}{record.birthday.value}{Style.RESET_ALL}"
             )
         else:
             print(
@@ -411,7 +431,7 @@ def show_birthday(args: List[str], address_book: AddressBook):
 
 
 @input_error
-def birthdays(args: List[str], address_book: AddressBook):
+def birthdays(address_book: AddressBook) -> None:
     """Show the upcoming birthdays within the next 7 days."""
     upcoming_birthdays = address_book.get_upcoming_birthdays()
     if upcoming_birthdays:
@@ -459,6 +479,9 @@ def help_command():
     print(
         f"phone [name]{Fore.GREEN} - Shows the phone number of a contact.{Style.RESET_ALL}"
     )
+    print(
+        f"add-phone [name] [phone number]{Fore.GREEN} - Adds an additional phone to a contact.{Style.RESET_ALL}"
+    )
     print(f"all{Fore.GREEN} - Shows all contacts.{Style.RESET_ALL}")
     print(
         f"add-birthday [name] [birthday]{Fore.GREEN} - Adds a birthday to a contact.{Style.RESET_ALL}"
@@ -489,14 +512,15 @@ def main():
         "add": lambda args: add_contact(address_book, *args),
         "change": lambda args: change_contact(address_book, *args),
         "phone": lambda args: show_phone(address_book, *args),
+        "add-phone": lambda args: add_phone_to_contact(address_book, *args),
         "all": lambda _: show_all_contacts(address_book),
+        "add-birthday": lambda args: add_birthday(address_book, *args),
+        "show-birthday": lambda args: show_birthday(address_book, *args),
+        "birthdays": lambda _: birthdays(address_book),
         "close": lambda _: handle_exit(address_book),
         "exit": lambda _: handle_exit(address_book),
         "quit": lambda _: handle_exit(address_book),
         "help": lambda _: help_command(),
-        "add-birthday": lambda args: add_birthday(args, address_book),
-        "show-birthday": lambda args: show_birthday(args, address_book),
-        "birthdays": lambda args: birthdays(args, address_book),
     }
 
     init(autoreset=True)  # Initialize colorama
