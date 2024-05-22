@@ -4,6 +4,7 @@
 ```plaintext
 src/
 ├── application/
+│   ├── command_registry.py  # Потрібний для динамічного створення "регістру команд".
 │   ├── services.py  # Логіка для роботи з контактами
 │   ├── entities.py  # Класи Field, Name, Phone, Birthday, Record
 │   └── interfaces.py  # Інтерфейси для взаємодії зі storage (у майбутньому — бази даних, хмарні сервіси тощо)
