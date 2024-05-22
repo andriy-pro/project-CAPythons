@@ -51,7 +51,7 @@ def main():
     # (на цей момент потрібно ввести команду "lang" + "uk" або "en")
     #exit_command=False
     while not Command.exit_command_flag:
-        user_input = user_input = input(f"{Fore.YELLOW}Enter a command: {Style.RESET_ALL}").strip()
+        user_input =  input(f"{Fore.YELLOW}Enter a command: {Style.RESET_ALL}").strip()
         if user_input.startswith("lang "):
             _, lang = user_input.split(maxsplit=1)
             Message.load_templates(lang)

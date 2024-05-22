@@ -49,7 +49,8 @@ def handle_command(command: str, address_book: AddressBook, *args: str) -> None:
     else:
         Message.error("incorrect_command", command=command)
 
-
+#review: very interesting approach, It’s not clear 
+#why it was necessary to use classes and not class methods, for example
 @register_command("hello")
 class HelloCommand(Command):
     def execute(self, *args: str) -> None:
@@ -144,7 +145,7 @@ class AddBirthdayCommand(FieldCommand):
         record.add_birthday(field)
         Message.info("birthday_set", name=record.name.value, birthday=field.value)
 
-
+# rewiev: TODO I think all execute must have  *args parameter: def execute(self,self, *args: str)
 @register_command("all")
 class ShowAllContactsCommand(Command):
     def execute(self) -> None:

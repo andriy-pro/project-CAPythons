@@ -6,6 +6,10 @@ from presentation.messages import Message
 
 
 # Базовий клас для команд. Кожна команда повинна реалізовувати метод 'execute'
+#review: Creating a class every command and every time the command is called 
+#seems a bit wasteful in terms of resources spent. 
+#I would prefer one class with all commands, created once
+
 class Command(ABC):
     exit_command_flag=False
     def __init__(self, address_book: AddressBook):
