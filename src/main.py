@@ -1,8 +1,8 @@
 import sys
 import os
 
-# Add project root directory to sys.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+# Додавання шляху до каталогу src для імпорту модулів
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from presentation.cli import main
 

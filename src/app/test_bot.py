@@ -379,16 +379,16 @@ def add_phone_to_contact(address_book: AddressBook, *args: str) -> None:
 
 
 @input_error
-def show_all_contacts(contacts: AddressBook) -> None:
+def show_all_contacts(address_book: AddressBook) -> None:
     """Show all contacts.
 
     Parameters
     ----------
-    contacts : AddressBook
+    address_book : AddressBook
         The address book containing contacts.
     """
-    if contacts.data:
-        for record in contacts.data.values():
+    if address_book.data:
+        for record in address_book.data.values():
             print(str(record))
     else:
         raise IndexError("No contacts available.")
