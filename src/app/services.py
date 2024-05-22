@@ -1,5 +1,7 @@
+import sys
 from app.interfaces import Command, FieldCommand
 from app.entities import Field, Name, Phone, Birthday, Record, AddressBook
+from infrastructure.storage import FileStorage
 from presentation.messages import Message
 from app.command_registry import register_command, get_command
 from typing import Callable
@@ -152,3 +154,15 @@ class ShowAllContactsCommand(Command):
                 print(str(record))
         else:
             raise IndexError("No contacts available.")
+
+
+@register_command("exit")
+@register_command("quit")
+@register_command("close")
+class ExitCommand(Command):
+    def execute(self, *args: str) -> None:
+        """Зберігає адресну книгу та виходить з програми."""
+        storage = FileStorage()
+        storage.save_contacts(self.address_book.data)
+        Message.info("exit_message")
+        sys.exit()

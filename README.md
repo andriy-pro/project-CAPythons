@@ -25,3 +25,36 @@ tests/ # Імена файлів з тестами могли б вигляда�
 ├── test_services.py
 └── test_storage.py
 ```
+
+### Налаштування запуску проекту
+У теку `.vscode` додати файл `launch.json` з наступним вмістом:
+```json
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Launch main.py",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/main.py",
+            "console": "integratedTerminal"
+        }
+    ]
+}
+```
+
+### Налаштування запуску тестів з теки `src/tests/`
+Файл `settings.json` (у теці `.vscode`):
+```json
+{
+    "python.testing.unittestArgs": [
+        "-v",
+        "-s",
+        "./src/tests",
+        "-p",
+        "test_*.py"
+    ],
+    "python.testing.pytestEnabled": false,
+    "python.testing.unittestEnabled": true
+}
+```

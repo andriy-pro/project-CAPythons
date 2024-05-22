@@ -2,10 +2,11 @@ import unittest
 import sys
 import os
 
-# Додавання теки src до sys.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
+# Додавання кореневої теки проекту до sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
-from app.entities import AddressBook, Record, Name, Phone
+from src.app.entities import AddressBook, Record, Name, Phone
+
 
 class TestAddressBook(unittest.TestCase):
 
@@ -27,13 +28,21 @@ class TestAddressBook(unittest.TestCase):
         new_record = Record(Name("Alice"))
         new_record.add_phone(Phone("1112223333"))
         self.book.add_record(new_record)
-        self.assertTrue(any(record.name.value == "Alice" for record in self.book.data.values()))
+        self.assertTrue(
+            any(record.name.value == "Alice" for record in self.book.data.values())
+        )
 
     def test_delete_record(self):
         """Test removing a record from the address book."""
-        jane_record_id = next(record.id for record in self.book.data.values() if record.name.value == "Jane")
+        jane_record_id = next(
+            record.id
+            for record in self.book.data.values()
+            if record.name.value == "Jane"
+        )
         self.book.delete(jane_record_id)
-        self.assertFalse(any(record.name.value == "Jane" for record in self.book.data.values()))
+        self.assertFalse(
+            any(record.name.value == "Jane" for record in self.book.data.values())
+        )
         with self.assertRaises(KeyError):
             self.book.delete(jane_record_id)
 
@@ -71,6 +80,7 @@ class TestAddressBook(unittest.TestCase):
         self.assertNotIn(
             "1234567890", [phone.value for phone in self.john_record.phones]
         )
+
 
 if __name__ == "__main__":
     unittest.main()
