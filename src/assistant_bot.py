@@ -241,9 +241,10 @@ def parse_input(user_input: str) -> tuple[str, List[str]]:
 
 @input_error
 def handle_command(
-    command_handlers: Dict[str, Callable[[Optional[List[str]]], None]],
+    command_handlers: Dict[str, Callable[[Optional[AddressBook],Optional[List[str]]], None]],
     command: str,
-    args: Optional[List[str]],
+    ab:AddressBook,
+    args: Optional[List[str]]
 ) -> None:
     """Handle the given command using the appropriate handler.
 
@@ -259,7 +260,7 @@ def handle_command(
     if command in command_handlers:
         if args is None:
             args = []  # Use an empty list if no arguments are provided
-        command_handlers[command](args)
+        command_handlers[command](args,adb=ab)
     else:
         raise TypeError(f"Unknown command '{command}'")
 
@@ -271,7 +272,7 @@ def hello() -> None:
 
 
 @input_error
-def add_contact(contacts: AddressBook, *args: str) -> None:
+def add_contact(*args,**kwargs) -> None:
     """Add a new contact.
 
     Parameters
@@ -281,9 +282,10 @@ def add_contact(contacts: AddressBook, *args: str) -> None:
     args : str
         The name and phone number of the new contact.
     """
-    if len(args) != 2:
-        raise ValueError("Usage: add [name] [phone number]")
-    name, phone = args
+    contacts=kwargs["adb"]
+    if len(args[0]) != 2:
+       raise ValueError("Usage: add [name] [phone number]")
+    name, phone = args[0]
     record = contacts.find(Name(name))
     if record:
         if any(p.value == phone for p in record.phones):
@@ -425,9 +427,9 @@ def birthdays(args: List[str], address_book: AddressBook):
         )
 
 
-def handle_exit(address_book: AddressBook) -> None:
+def handle_exit(*args) -> None:
     """Exit the program, saving the address book to a file."""
-    save_data(address_book)  # Save the address book before exiting
+    save_data(args[0])  # Save the address book before exiting
     print(f"{Fore.GREEN}{Style.BRIGHT}Good bye!{Style.RESET_ALL}")
     sys.exit()
 
@@ -484,16 +486,16 @@ def help_command():
 def main():
     """Main function that runs the command line interface for an assistant bot."""
     address_book = load_data()  # Load the address book from the file
-    command_handlers: Dict[str, Callable[[Optional[List[str]]], None]] = {
-        "hello": lambda _: hello(),
-        "add": lambda args: add_contact(address_book, *args),
+    command_handlers: Dict[str, Callable[[Optional[AddressBook], Optional[List[str]]], None]] = {
+        "hello": hello,
+        "add":  add_contact,
         "change": lambda args: change_contact(address_book, *args),
         "phone": lambda args: show_phone(address_book, *args),
         "all": lambda _: show_all_contacts(address_book),
         "close": lambda _: handle_exit(address_book),
-        "exit": lambda _: handle_exit(address_book),
+        "exit": handle_exit,
         "quit": lambda _: handle_exit(address_book),
-        "help": lambda _: help_command(),
+        "help":  help_command,
         "add-birthday": lambda args: add_birthday(args, address_book),
         "show-birthday": lambda args: show_birthday(args, address_book),
         "birthdays": lambda args: birthdays(args, address_book),
@@ -520,7 +522,7 @@ def main():
     while True:
         user_input = input(f"{Fore.YELLOW}Enter a command: {Style.RESET_ALL}").strip()
         command, args = parse_input(user_input)
-        handle_command(command_handlers, command, args)
+        handle_command(command_handlers, command, address_book, args)
 
 
 if __name__ == "__main__":
