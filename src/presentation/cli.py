@@ -10,6 +10,7 @@ from app.services import handle_command
 from presentation.messages import Message
 from infrastructure.storage import FileStorage
 from colorama import init, Fore, Style
+from app.interfaces import Command
 
 
 def parse_input(user_input: str) -> Tuple[str, list[str]]:
@@ -48,8 +49,8 @@ def main():
 
     # TODO: Переробити зміну мови боту
     # (на цей момент потрібно ввести команду "lang" + "uk" або "en")
-    exit_command=False
-    while not exit_command:
+    #exit_command=False
+    while not Command.exit_command_flag:
         user_input = user_input = input(f"{Fore.YELLOW}Enter a command: {Style.RESET_ALL}").strip()
         if user_input.startswith("lang "):
             _, lang = user_input.split(maxsplit=1)

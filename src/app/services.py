@@ -155,6 +155,7 @@ class ShowAllContactsCommand(Command):
         else:
             raise IndexError("No contacts available.")
 
+exit_command_flag=False
 
 @register_command("exit")
 @register_command("quit")
@@ -165,4 +166,4 @@ class ExitCommand(Command):
         storage = FileStorage()
         storage.save_contacts(self.address_book.data)
         Message.info("exit_message")
-        sys.exit()
+        Command.exit_command_flag=True #sys.exit()

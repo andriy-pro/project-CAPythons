@@ -7,8 +7,10 @@ from presentation.messages import Message
 
 # Базовий клас для команд. Кожна команда повинна реалізовувати метод 'execute'
 class Command(ABC):
+    exit_command_flag=False
     def __init__(self, address_book: AddressBook):
         self.address_book = address_book
+        
 
     @abstractmethod
     def execute(self, *args: str) -> None:
