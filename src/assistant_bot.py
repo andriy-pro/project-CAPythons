@@ -5,7 +5,13 @@ from colorama import Fore, Style, init
 from datetime import datetime, timedelta
 import pickle
 
-
+#review: I strongly approve of documenting code.
+#However, I propose to distinguish between two situations:
+#1. This is a library that will be used heavily by other programmers. 
+#In this case, such detailed documentation is welcome.
+#2. This is not a library for general use. 
+#Then I think a comment like the first line brings the necessary clarity, 
+#everything that follows is simply a retelling of the code in other words.
 class Field:
     """Base class for all fields in a record.
 
@@ -28,7 +34,7 @@ class Field:
         """
         return str(self.value)
 
-
+#review: Well thought out error handling
 class Name(Field):
     """Class for storing contact names. Inherits from Field.
 
@@ -86,6 +92,7 @@ class Birthday(Field):
     def __init__(self, value: str):
         try:
             datetime.strptime(value, "%d.%m.%Y")
+            #review: We need to think about doing this and other checks in one place
         except ValueError:
             raise ValueError("Invalid date format. Use DD.MM.YYYY")
         super().__init__(value)
@@ -112,10 +119,12 @@ class Record:
     def remove_phone(self, phone: Phone):
         """Remove a phone number from the contact."""
         for p in self.phones:
+#review Alternative (fewer lines of code and faster execution I think):
+# phone_objects=[x for x in self.phones if x.value==phone]
             if p.value == phone.value:
                 self.phones.remove(p)
                 break
-
+#review: bug
     def edit_phone(self, old_phone: Phone, new_phone: Phone):
         """Edit an existing phone number in the contact."""
         self.remove_phone(old_phone)
@@ -129,6 +138,7 @@ class Record:
         """Return the string representation of the contact."""
         phones = "; ".join([str(phone) for phone in self.phones])
         birthday = f", birthday: {self.birthday}" if self.birthday else ""
+#review: Messages for phones and birthdays are not generated uniformly      
         return f"Contact name: {self.name}, phones: {phones}{birthday}"
 
 
@@ -149,7 +159,7 @@ class AddressBook(UserDict):
     def find(self, name: Name) -> Optional[Record]:
         """Find a record in the address book by name."""
         return self.data.get(name.value, None)
-
+#review: leap year is not taken into account
     def get_upcoming_birthdays(self) -> List[Dict[str, str]]:
         """Get upcoming birthdays within the next 7 days for contacts."""
         today = datetime.today().date()
@@ -188,7 +198,7 @@ class AddressBook(UserDict):
         """Return the string representation of the address book."""
         return "\n".join(str(record) for record in self.data.values())
 
-
+#review: Different colors help the user navigate messages
 def input_error(handler: Callable) -> Callable:
     """Decorator for handling errors in command functions."""
 
@@ -238,7 +248,8 @@ def parse_input(user_input: str) -> tuple[str, List[str]]:
     args = parts[1:] if len(parts) > 1 else []
     return command, args
 
-
+#review: It would be nice to mark all print operators a level or two higher, 
+#that is, return an error message when calling the handle_command function
 @input_error
 def handle_command(
     command_handlers: Dict[str, Callable[[Optional[AddressBook],Optional[List[str]]], None]],
@@ -269,7 +280,6 @@ def handle_command(
 def hello() -> None:
     """Greet the user."""
     print(f"{Fore.CYAN}How can I help you?{Style.RESET_ALL}")
-
 
 @input_error
 def add_contact(*args,**kwargs) -> None:
@@ -446,7 +456,7 @@ def load_data(filename="addressbook.pkl") -> AddressBook:
     except FileNotFoundError:
         return AddressBook()  # Return a new address book if the file is not found
 
-
+#rewiew: help is a good solution
 def help_command():
     """Display the help information with available commands."""
     print(f"{Fore.GREEN}This bot helps you manage your contacts.{Style.RESET_ALL}")
@@ -481,8 +491,12 @@ def help_command():
     print(
         f"phone John{Fore.GREEN} - Shows the phone number of {Fore.CYAN}John.{Fore.GREEN}\n"
     )
-
-
+#review
+#I personally like this design; 
+#it can save the number of lines of code and execution time. 
+#However, it is more complicated than if/else. 
+#Note the possibility of passing arguments using *args *kwargs 
+#or not passing arguments at all by declaring these functions as class methods
 def main():
     """Main function that runs the command line interface for an assistant bot."""
     address_book = load_data()  # Load the address book from the file
