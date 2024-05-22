@@ -58,3 +58,5 @@ tests/ # Імена файлів з тестами могли б вигляда�
     "python.testing.unittestEnabled": true
 }
 ```
+
+Or in vscode file->preference, then find unittestArgs and write src\tests in the line after -s
