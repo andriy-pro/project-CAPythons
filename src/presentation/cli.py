@@ -48,6 +48,7 @@ def main():
 
     # TODO: Переробити зміну мови боту
     # (на цей момент потрібно ввести команду "lang" + "uk" або "en")
+    exit_command=False
     while not exit_command:
         user_input = user_input = input(f"{Fore.YELLOW}Enter a command: {Style.RESET_ALL}").strip()
         if user_input.startswith("lang "):
