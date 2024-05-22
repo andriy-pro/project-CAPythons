@@ -60,3 +60,4 @@ tests/ # Імена файлів з тестами могли б вигляда�
 ```
 
 Or in vscode file->preference->setting, then find unittestArgs and write src\tests in the line after -s
+Instruction: https://code.visualstudio.com/docs/python/testing
