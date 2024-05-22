@@ -2,8 +2,9 @@
 
 Поточна структура проекту:
 ```plaintext
-.
-├── application
+src/
+├── application/
+│   ├── command_registry.py  # Потрібний для динамічного створення "регістру команд".
 │   ├── services.py  # Логіка для роботи з контактами
 │   ├── entities.py  # Класи Field, Name, Phone, Birthday, Record
 │   └── interfaces.py  # Інтерфейси для взаємодії зі storage (у майбутньому — бази даних, хмарні сервіси тощо)
@@ -15,11 +16,12 @@
 ├── resources
 │   ├── messages_en.json  # Шаблони повідомлень (англійські + українські)
 │   └── messages_en.json
-├── tests # Імена файлів з тестами могли б виглядати приблизно так
-│   ├── test_cli.py
-│   ├── test_entities.py
-│   ├── test_interfaces.py
-│   ├── test_services.py
-│   └── test_storage.py
 └── main.py  # Точка входу: для запуску у VS Code всього додатку, потрібно відкрити саме цей файл, і (наприклад) натиснути F5.
+
+tests/ # Імена файлів з тестами могли б виглядати приблизно так
+├── test_cli.py
+├── test_entities.py
+├── test_interfaces.py
+├── test_services.py
+└── test_storage.py
 ```
