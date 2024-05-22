@@ -39,14 +39,17 @@ def handle_command(
     else:
         raise TypeError(f"Unknown command '{command}'")
 
+exit_command=False
 
 def handle_exit(address_book: AddressBook) -> None:
     save_data(address_book)
     print(f"{Fore.GREEN}{Style.BRIGHT}Good bye!{Style.RESET_ALL}")
-    sys.exit()
+    global exit_command 
+    exit_command=True #sys.exit()
 
 
 def main():
+    
     address_book = load_data()
     command_handlers: Dict[str, Callable[[Optional[List[str]]], None]] = {
         "hello": lambda _: hello(),
@@ -81,8 +84,8 @@ def main():
     print()
     help_command()
 
-    while True:
-        user_input = input(f"{Fore.YELLOW}Enter a command: {Style.RESET_ALL}").strip()
+    while not exit_command:
+        user_input = input()#f"{Fore.YELLOW}Enter a command: {Style.RESET_ALL}")#.strip()
         command, args = parse_input(user_input)
         handle_command(command_handlers, command, args)
 
