@@ -1,4 +1,4 @@
-import sys
+from app import command_registry
 from app.interfaces import Command, FieldCommand
 from app.entities import Field, Name, Phone, Birthday, Record, AddressBook
 from infrastructure.storage import FileStorage
@@ -49,19 +49,30 @@ def handle_command(command: str, address_book: AddressBook, *args: str) -> None:
     else:
         Message.error("incorrect_command", command=command)
 
-#review: very interesting approach, It’s not clear 
-#why it was necessary to use classes and not class methods, for example
+
+# review: very interesting approach, It’s not clear
+# why it was necessary to use classes and not class methods, for example
 @register_command("hello")
 class HelloCommand(Command):
+    description = {
+        "en": "Displays a greeting message.",
+        "uk": "Виводить привітальне повідомлення.",
+    }
+
     def execute(self, *args: str) -> None:
-        """Виводить привітальне повідомлення."""
+        """Displays a greeting message."""
         Message.info("greeting")
 
 
 @register_command("add")
 class AddContactCommand(Command):
+    description = {
+        "en": "Adds a new contact to the address book.",
+        "uk": "Додає новий контакт у адресну книгу.",
+    }
+
     def execute(self, *args: str) -> None:
-        """Додає новий контакт у адресну книгу."""
+        """Adds a new contact to the address book."""
         if len(args) != 2:
             Message.error("incorrect_arguments")
             return
@@ -82,8 +93,13 @@ class AddContactCommand(Command):
 
 @register_command("change")
 class ChangeContactCommand(Command):
+    description = {
+        "en": "Changes the phone number of an existing contact.",
+        "uk": "Змінює номер телефону існуючого контакту.",
+    }
+
     def execute(self, *args: str) -> None:
-        """Змінює номер телефону існуючого контакту."""
+        """Changes the phone number of an existing contact."""
         if len(args) != 2:
             Message.error("incorrect_arguments")
             return
@@ -107,11 +123,16 @@ class ChangeContactCommand(Command):
 
 @register_command("add-phone")
 class AddPhoneCommand(FieldCommand):
+    description = {
+        "en": "Adds a new phone number to an existing contact.",
+        "uk": "Додає новий номер телефону до існуючого контакту.",
+    }
+
     def create_field(self, *args: str) -> Field:
         return Phone(args[0])
 
     def execute_field(self, record: Record, field: Field) -> None:
-        """Додає новий номер телефону до існуючого контакту."""
+        """Adds a new phone number to an existing contact."""
         if any(p.value == field.value for p in record.phones):
             Message.warning("contact_exists", name=record.name.value, phone=field.value)
         else:
@@ -121,8 +142,13 @@ class AddPhoneCommand(FieldCommand):
 
 @register_command("show-phone")
 class ShowPhoneCommand(Command):
+    description = {
+        "en": "Shows the phone number of a contact.",
+        "uk": "Показує номер телефону контакту.",
+    }
+
     def execute(self, *args: str) -> None:
-        """Показує номер телефону контакту."""
+        """Shows the phone number of a contact."""
         if len(args) != 1:
             Message.error("incorrect_arguments")
             return
@@ -137,34 +163,68 @@ class ShowPhoneCommand(Command):
 
 @register_command("add-birthday")
 class AddBirthdayCommand(FieldCommand):
+    description = {
+        "en": "Adds a birthday to an existing contact.",
+        "uk": "Додає день народження до існуючого контакту.",
+    }
+
     def create_field(self, *args: str) -> Field:
         return Birthday(args[0])
 
     def execute_field(self, record: Record, field: Field) -> None:
-        """Додає день народження до існуючого контакту."""
+        """Adds a birthday to an existing contact."""
         record.add_birthday(field)
         Message.info("birthday_set", name=record.name.value, birthday=field.value)
+
 
 # rewiev: TODO I think all execute must have  *args parameter: def execute(self,self, *args: str)
 @register_command("all")
 class ShowAllContactsCommand(Command):
-    def execute(self) -> None:
-        """Показує всі контакти."""
+    description = {
+        "en": "Shows all contacts in the address book.",
+        "uk": "Показує всі контакти.",
+    }
+
+    def execute(self, *args: str) -> None:
+        """Shows all contacts in the address book."""
         if self.address_book.data:
             for record in self.address_book.data.values():
                 print(str(record))
         else:
             raise IndexError("No contacts available.")
 
-exit_command_flag=False
+
+exit_command_flag = False
+
 
 @register_command("exit")
-@register_command("quit")
 @register_command("close")
 class ExitCommand(Command):
+    description = {
+        "en": "Saves the address book and exits the program.",
+        "uk": "Зберігає адресну книгу та виходить з програми.",
+    }
+
     def execute(self, *args: str) -> None:
-        """Зберігає адресну книгу та виходить з програми."""
+        """Saves the address book and exits the program."""
         storage = FileStorage()
         storage.save_contacts(self.address_book.data)
         Message.info("exit_message")
-        Command.exit_command_flag=True #sys.exit()
+        Command.exit_command_flag = True  # sys.exit()
+
+
+@register_command("help")
+class HelpCommand(Command):
+    description = {
+        "en": "Displays this help message.",
+        "uk": "Виводить це повідомлення про доступні команди.",
+    }
+
+    def execute(self, *args: str) -> None:
+        """Displays this help message."""
+        language = args[0] if args else "en"
+        for command_name, command_class in command_registry.command_registry.items():
+            description = command_class.description.get(
+                language, "No description available."
+            )
+            print(f"{command_name}: {description}")
