@@ -50,6 +50,7 @@ class Name(Field):
 
 
 class Phone(Field):
+    phone_pattern = re.compile(r"^\+?[1-9]\d{9,14}$")
     """Class for storing phone numbers. Inherits from Field.
 
     Parameters
@@ -62,10 +63,8 @@ class Phone(Field):
     ValueError
         Phone number must be 10-15 digits and may start with +.
     """
-
     def __init__(self, value: str):
-        phone_pattern = re.compile(r"^\+?[1-9]\d{9,14}$")
-        if not phone_pattern.match(value):
+        if not Phone.phone_pattern.match(value):
             raise ValueError("Phone number must be 10-15 digits and may start with +")
         super().__init__(value)
 
