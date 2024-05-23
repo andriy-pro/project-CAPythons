@@ -1,5 +1,5 @@
-import src.presentation.cli  # The module which contains the call to input
-
+#import src.presentation.cli  # The module which contains the call to input
+import src
 import sys
 
 class Test:
