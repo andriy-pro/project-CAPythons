@@ -1,6 +1,6 @@
 import sys
 from app.interfaces import Command, FieldCommand
-from app.entities import Field, Name, Phone, Birthday, Record, AddressBook
+from app.entities import Field, Name, Phone, Birthday, Record, AddressBook, NotesBook
 from infrastructure.storage import FileStorage
 from presentation.messages import Message
 from app.command_registry import register_command, get_command
@@ -17,45 +17,98 @@ def input_error(handler: Callable) -> Callable:
             return handler(*args, **kwargs)
         except TypeError as e:
             print(
-                f"{Fore.RED}Error: Incorrect command.\n{Fore.MAGENTA}{e}{Style.RESET_ALL}"
+                f"{Fore.RED}Error: Incorrect command.\n{
+                    Fore.MAGENTA}{e}{Style.RESET_ALL}"
             )
         except ValueError as e:
             print(
-                f"{Fore.RED}Error: Incorrect arguments.\n{Fore.MAGENTA}{e}{Style.RESET_ALL}"
+                f"{Fore.RED}Error: Incorrect arguments.\n{
+                    Fore.MAGENTA}{e}{Style.RESET_ALL}"
             )
         except KeyError as e:
             print(
-                f"{Fore.RED}Error: Contact not found.\n{Fore.MAGENTA}{e}{Style.RESET_ALL}"
+                f"{Fore.RED}Error: Contact not found.\n{
+                    Fore.MAGENTA}{e}{Style.RESET_ALL}"
             )
         except IndexError as e:
             print(
-                f"{Fore.RED}Error: Index out of range.\n{Fore.MAGENTA}{e}{Style.RESET_ALL}"
+                f"{Fore.RED}Error: Index out of range.\n{
+                    Fore.MAGENTA}{e}{Style.RESET_ALL}"
             )
         except Exception as e:
             print(
-                f"{Fore.RED}An unexpected error occurred:\n{Fore.MAGENTA}{e}{Style.RESET_ALL}"
+                f"{Fore.RED}An unexpected error occurred:\n{
+                    Fore.MAGENTA}{e}{Style.RESET_ALL}"
             )
 
     return wrapper
 
 
 @input_error
-def handle_command(command: str, address_book: AddressBook, *args: str) -> None:
+def handle_command(command: str, address_book: AddressBook, notes_book: NotesBook, *args: str) -> None:
     """Обробляє команду користувача, викликаючи відповідний метод."""
     cmd = get_command(command)
     if cmd:
-        cmd_instance = cmd(address_book)
+        cmd_instance = cmd(
+            notes_book if 'note' in command else address_book)
+        # cmd_instance = cmd(command.includes('note') ? notes_book: address_book)
         cmd_instance.execute(*args)
     else:
         Message.error("incorrect_command", command=command)
 
-#review: very interesting approach, It’s not clear 
-#why it was necessary to use classes and not class methods, for example
+# review: very interesting approach, It’s not clear
+# why it was necessary to use classes and not class methods, for example
+
+
 @register_command("hello")
 class HelloCommand(Command):
     def execute(self, *args: str) -> None:
         """Виводить привітальне повідомлення."""
         Message.info("greeting")
+
+
+@register_command("add-note")
+class AddNoteCommand(Command):
+    def execute(self, *args: str) -> None:
+        """Додає нову замітку."""
+        if len(args) != 2:
+            Message.error("incorrect_arguments")
+            return
+        title, text = args
+        self.address_book.add_note(title, text)
+        Message.info("note_added", title=title)
+
+
+@register_command("edit-note")
+class EditNoteCommand(Command):
+    def execute(self, *args: str) -> None:
+        """Редагує існуючу замітку."""
+        print(self)
+        if len(args) != 2:
+            Message.error("incorrect_arguments")
+            return
+        title, new_title = args
+        self.address_book.edit_note(title, new_title)
+        Message.info("note_updated", title=title, new_title=new_title)
+
+
+@register_command("delete-note")
+class DeleteNoteCommand(Command):
+    def execute(self, *args: str) -> None:
+        """Видаляє існуючу замітку."""
+        if len(args) != 1:
+            Message.error("incorrect_arguments")
+            return
+        title = args[0]
+        self.address_book.delete_note(title)
+        Message.info("note_deleted", title=title)
+
+
+@register_command("display-notes")
+class DisplayNotesCommand(Command):
+    def execute(self, *args: str) -> None:
+        """Виводить всі замітки."""
+        self.address_book.display_notes()
 
 
 @register_command("add")
@@ -72,7 +125,8 @@ class AddContactCommand(Command):
                 Message.warning("contact_exists", name=name, phone=phone)
             else:
                 current_phone = record.phones[0].value if record.phones else "No phone"
-                Message.warning("contact_exists", name=name, phone=current_phone)
+                Message.warning("contact_exists", name=name,
+                                phone=current_phone)
         else:
             new_record = Record(Name(name))
             new_record.add_phone(Phone(phone))
@@ -113,10 +167,12 @@ class AddPhoneCommand(FieldCommand):
     def execute_field(self, record: Record, field: Field) -> None:
         """Додає новий номер телефону до існуючого контакту."""
         if any(p.value == field.value for p in record.phones):
-            Message.warning("contact_exists", name=record.name.value, phone=field.value)
+            Message.warning("contact_exists",
+                            name=record.name.value, phone=field.value)
         else:
             record.add_phone(field)
-            Message.info("contact_added", name=record.name.value, phone=field.value)
+            Message.info("contact_added", name=record.name.value,
+                         phone=field.value)
 
 
 @register_command("show-phone")
@@ -143,9 +199,12 @@ class AddBirthdayCommand(FieldCommand):
     def execute_field(self, record: Record, field: Field) -> None:
         """Додає день народження до існуючого контакту."""
         record.add_birthday(field)
-        Message.info("birthday_set", name=record.name.value, birthday=field.value)
+        Message.info("birthday_set", name=record.name.value,
+                     birthday=field.value)
 
 # rewiev: TODO I think all execute must have  *args parameter: def execute(self,self, *args: str)
+
+
 @register_command("all")
 class ShowAllContactsCommand(Command):
     def execute(self) -> None:
@@ -156,7 +215,9 @@ class ShowAllContactsCommand(Command):
         else:
             raise IndexError("No contacts available.")
 
-exit_command_flag=False
+
+exit_command_flag = False
+
 
 @register_command("exit")
 @register_command("quit")
@@ -167,4 +228,4 @@ class ExitCommand(Command):
         storage = FileStorage()
         storage.save_contacts(self.address_book.data)
         Message.info("exit_message")
-        Command.exit_command_flag=True #sys.exit()
+        Command.exit_command_flag = True  # sys.exit()
