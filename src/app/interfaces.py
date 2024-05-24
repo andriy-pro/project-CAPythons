@@ -1,20 +1,23 @@
 from abc import ABC, abstractmethod
 from typing import Dict
-from app.entities import Record, Field, AddressBook, Name
+from app.entities import Record, Field, AddressBook, Name, NotesBook
 import uuid
 from presentation.messages import Message
 
 
 # Базовий клас для команд. Кожна команда повинна реалізовувати метод 'execute'
-#review: Creating a class every command and every time the command is called 
-#seems a bit wasteful in terms of resources spent. 
-#I would prefer one class with all commands, created once
+# review: Creating a class every command and every time the command is called
+# seems a bit wasteful in terms of resources spent.
+# I would prefer one class with all commands, created once
 
 class Command(ABC):
-    exit_command_flag=False
-    def __init__(self, address_book: AddressBook):
+    exit_command_flag = False
+
+    def __init__(self, address_book: AddressBook | NotesBook,
+                 #  notes_book: NotesBook
+                 ):
         self.address_book = address_book
-        
+        # self.notes_book = notes_book
 
     @abstractmethod
     def execute(self, *args: str) -> None:

@@ -1,4 +1,6 @@
 import uuid
+import os
+import json
 from datetime import datetime, timedelta
 from typing import List, Optional, Dict
 from collections import UserDict
@@ -59,7 +61,8 @@ class Record:
     def __str__(self):
         phones = "; ".join([str(phone) for phone in self.phones])
         birthday = (
-            f"{Fore.GREEN}, birthday: {Fore.CYAN}{self.birthday}{Style.RESET_ALL}"
+            f"{Fore.GREEN}, birthday: {Fore.CYAN}{
+                self.birthday}{Style.RESET_ALL}"
             if self.birthday
             else ""
         )
@@ -88,11 +91,13 @@ class AddressBook(UserDict):
 
         for record in self.data.values():
             if record.birthday:
-                birthday = datetime.strptime(record.birthday.value, "%d.%m.%Y").date()
+                birthday = datetime.strptime(
+                    record.birthday.value, "%d.%m.%Y").date()
                 birthday_this_year = birthday.replace(year=today.year)
 
                 if birthday_this_year < today:
-                    birthday_this_year = birthday_this_year.replace(year=today.year + 1)
+                    birthday_this_year = birthday_this_year.replace(
+                        year=today.year + 1)
 
                 day_difference = (birthday_this_year - today).days
                 if 0 <= day_difference <= 7:
@@ -115,3 +120,76 @@ class AddressBook(UserDict):
 
     def __str__(self):
         return "\n".join(str(record) for record in self.data.values())
+
+
+class NotesBook:
+    def __init__(self, file_name: str = 'notes.json') -> None:
+        self.file_name = file_name
+        self.notes: Dict[str, str] = self.load_notes()
+
+    def load_notes(self) -> Dict[str, str]:
+        if os.path.exists(self.file_name):
+            with open(self.file_name, 'r', encoding='utf-8') as file:
+                return json.load(file)
+        return {}
+
+    def save_notes(self) -> None:
+        with open(self.file_name, 'w', encoding='utf-8') as file:
+            json.dump(self.notes, file, ensure_ascii=False, indent=4)
+
+    def add_note(self, title: str, content: str) -> None:
+        self.notes[title] = content
+        self.save_notes()
+
+    def edit_note(self, title: str, new_content: str) -> None:
+        if title in self.notes:
+            self.notes[title] = new_content
+            self.save_notes()
+        else:
+            raise KeyError(f"Note with title '{title}' does not exist.")
+
+    def delete_note(self, title: str) -> None:
+        if title in self.notes:
+            del self.notes[title]
+            self.save_notes()
+        else:
+            raise KeyError(f"Note with title '{title}' does not exist.")
+
+    def display_notes(self) -> None:
+        if not self.notes:
+            raise ValueError("No notes to display.")
+        else:
+            for title, content in self.notes.items():
+                print(f"Title: {title}\nContent: {content}\n{'-'*40}")
+
+
+# if __name__ == "__main__":
+#     manager = NotesBook()
+
+#     while True:
+#         print("\nMenu:")
+#         print("1. Add a note")
+#         print("2. Edit a note")
+#         print("3. Delete a note")
+#         print("4. Display all notes")
+#         print("5. Exit")
+
+#         choice = input("Choose an option: ")
+
+#         if choice == '1':
+#             title = input("Enter note title: ")
+#             content = input("Enter note content: ")
+#             manager.add_note(title, content)
+#         elif choice == '2':
+#             title = input("Enter note title to edit: ")
+#             new_content = input("Enter new note content: ")
+#             manager.edit_note(title, new_content)
+#         elif choice == '3':
+#             title = input("Enter note title to delete: ")
+#             manager.delete_note(title)
+#         elif choice == '4':
+#             manager.display_notes()
+#         elif choice == '5':
+#             break
+#         else:
+#             print("Invalid choice. Please try again.")

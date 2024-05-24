@@ -20,7 +20,8 @@ class Message:
         try:
             with open(
                 os.path.join(
-                    os.path.dirname(__file__), f"../resources/messages_{language}.json"
+                    os.path.dirname(
+                        __file__), f"../resources/messages_{language}.json"
                 ),
                 "r",
                 encoding="utf-8",
@@ -28,7 +29,8 @@ class Message:
                 cls.templates = json.load(file)
         except FileNotFoundError:
             print(
-                f"Language file for '{language}' not found. Loading default (English) templates."
+                f"Language file for '{
+                    language}' not found. Loading default (English) templates."
             )
             with open(
                 os.path.join(
@@ -49,7 +51,12 @@ class Message:
     @classmethod
     def format_message(cls, template_name: str, **kwargs) -> str:
         """Format the message with provided parameters."""
-        template = cls.templates.get(template_name, "Message template not found")
+        # print(cls.templates)
+        # print("\n" + template_name)
+
+        # print(cls.templates.get('note_added'))
+        template = cls.templates.get(
+            template_name, "Message template not found")
         formatted_message = template.format(
             **{k: f"{{param}}{v}{{reset}}" for k, v in kwargs.items()}
         )
