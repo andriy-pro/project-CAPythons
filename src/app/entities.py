@@ -213,6 +213,6 @@ class NotesBook:
             for note in self.notes:
                 # print(f"ID: {note['id']}\nTitle: {note['title']}\nText: {
                 #       note['text']}\nTags: {', '.join(note['tags'])}\n{'-'*40}")
-                print(f"\nID: {note['id']}\nTitle: {note['title']}\nText: {
-                    note['text']})\n")
+                print(f"\nID: {note['id']}\nTitle: {
+                      note['title']}\nText: {note['text']}\n")
                 print('-'*40)
