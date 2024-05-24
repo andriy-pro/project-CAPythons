@@ -5,17 +5,15 @@ import uuid
 from presentation.messages import Message
 
 
-# Базовий клас для команд. Кожна команда повинна реалізовувати метод 'execute'
-# review: Creating a class every command and every time the command is called
-# seems a bit wasteful in terms of resources spent.
-# I would prefer one class with all commands, created once
-
 class Command(ABC):
+    description = ""
     exit_command_flag = False
 
-    def __init__(self, book_type: AddressBook | NotesBook,
-                 #  notes_book: NotesBook
-                 ):
+    def __init__(
+        self,
+        book_type: AddressBook | NotesBook,
+        #  notes_book: NotesBook
+    ):
         self.book_type = book_type
         # self.notes_book = notes_book
 

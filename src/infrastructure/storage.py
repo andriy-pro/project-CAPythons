@@ -1,52 +1,40 @@
-import pickle
-from typing import Dict
-from app.entities import Record
-from app.interfaces import StorageInterface
+import json
 import uuid
+from typing import Dict
+from app.entities import Record, AddressBook, Name, Phone, Birthday, Field
 
 
-# Це "заплатка", яка була потрібна для того, щоб 'pickle' працював без помилок, якщо викликається з модуля.
-class CustomUnpickler(pickle.Unpickler):
-    def find_class(self, module, name):
-        if module == "__main__":
-            module = "app.entities"
-        elif module.startswith("src."):
-            module = module[4:]
-        return super().find_class(module, name)
-
-
-class FileStorage(StorageInterface):
-    """Class for saving and loading contacts to and from a file."""
-
-    def __init__(self, filename: str = "addressbook.pkl"):
-        self.filename = filename
+class FileStorage:
+    def __init__(self, file_path: str):
+        self.file_path = file_path
 
     def save_contacts(self, contacts: Dict[uuid.UUID, Record]) -> None:
-        """Save contacts to a file.
-
-        Parameters
-        ----------
-        contacts : Dict[uuid.UUID, Record]
-            A dictionary of contacts to save.
-        """
-        with open(self.filename, "wb") as f:
-            pickle.dump(contacts, f)
+        data = {
+            str(record_id): record.to_dict() for record_id, record in contacts.items()
+        }
+        with open(self.file_path, "w", encoding="utf-8") as file:
+            json.dump(data, file, ensure_ascii=False, indent=4)
 
     def load_contacts(self) -> Dict[uuid.UUID, Record]:
-        """Load contacts from a file.
-
-        Returns
-        -------
-        Dict[uuid.UUID, Record]
-            A dictionary of loaded contacts.
-
-        Raises
-        ------
-        FileNotFoundError
-            If the file is not found.
-        """
         try:
-            with open(self.filename, "rb") as f:
-                return CustomUnpickler(f).load()
+            with open(self.file_path, "r", encoding="utf-8") as file:
+                data = json.load(file)
+            contacts = {}
+            for record_id, fields in data.items():
+                name = Name(fields.pop("name"))
+                record = Record(name)
+                record.id = uuid.UUID(record_id)
+                for field_name, field_value in fields.items():
+                    if field_name == "phones":
+                        phones = [Phone(phone) for phone in field_value]
+                        record.fields["phones"] = phones
+                    else:
+                        field_class = globals().get(field_name.capitalize(), Field)
+                        record.fields[field_name] = field_class(field_value)
+                contacts[record.id] = record
+            return contacts
         except FileNotFoundError:
+            return {}
+        except json.JSONDecodeError as e:
+            print(f"Error decoding JSON: {e}")
             return {}
