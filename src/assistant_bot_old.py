@@ -88,6 +88,27 @@ class Email(Field):
             raise ValueError("Invalid email format")
         super().__init__(value)
 
+
+class Address(Field):
+    """Class for storing contact address. Inherits from Field.
+
+                Parameters
+                ----------
+                value : str
+                    The name of the address.
+
+                Raises
+                ------
+                ValueError
+                    If the address is empty.
+                """
+
+    def __init__(self, value: str):
+        if not value:
+            raise ValueError("Address cannot be empty.")
+        super().__init__(value)
+
+
 class Birthday(Field):
     """Class for storing and validating birthdays. Inherits from Field.
 
@@ -124,6 +145,7 @@ class Record:
         self.phones = []
         self.birthday = None
         self.email = None
+        self.address = None
 
     def add_phone(self, phone: Phone):
         """Add a phone number to the contact."""
@@ -165,6 +187,14 @@ class Record:
         """Delete the email address of the contact."""
         self.email = None
 
+    def add_address(self, address: Address):
+        """Add the address of the contact"""
+        self.address = address
+
+    def edit_address(self, address: Address):
+        """Edit the address of the contact"""
+        self.address = address
+
     def add_birthday(self, birthday: Birthday):
         """Add a birthday to the contact."""
         self.birthday = birthday
@@ -198,8 +228,8 @@ class AddressBook(UserDict):
         """Find a record in the address book by name."""
         return self.data.get(name.value, None)
 
-    def get_upcoming_birthdays(self) -> List[Dict[str, str]]:
-        """Get upcoming birthdays within the next 7 days for contacts."""
+    def get_upcoming_birthdays(self, set_number: int) -> List[Dict[str, str]]:
+        """Get upcoming birthdays within a set amount of days for contacts."""
         today = datetime.today().date()
         upcoming_birthdays = []
 
@@ -212,7 +242,7 @@ class AddressBook(UserDict):
                     birthday_this_year = birthday_this_year.replace(year=today.year + 1)
 
                 day_difference = (birthday_this_year - today).days
-                if 0 <= day_difference <= 7:
+                if 0 <= day_difference <= set_number:
                     congratulation_date = birthday_this_year
                     if (
                         birthday_this_year.weekday() > 4
@@ -488,6 +518,36 @@ def edit_email_of_contact(contacts: AddressBook, *args: str) -> None:
         raise KeyError(f"Name '{name}' not found.")
 
 @input_error
+def add_address_to_contact(contacts: AddressBook, *args: str) -> None:
+    """Add the address to a contact."""
+    if len(args) <= 2:
+        raise ValueError("Usage: add-address [name] [address separated with spaces]")
+    name = args[0]
+    address_str = ", ".join([str(address_part) for address_part in args[1:]])
+    record = contacts.find(Name(name))
+    if record:
+        record.add_address(Address(address_str))
+        print(
+            f"{Fore.GREEN}Address for {Fore.CYAN}{name}{Fore.GREEN} set to {Fore.CYAN}{address_str}{Style.RESET_ALL}"
+        )
+    else:
+        raise KeyError(f"Name '{name}' not found.")
+
+@input_error
+def edit_address_of_contact(contacts: AddressBook, *args: str) -> None:
+    """Edit the address of a contact"""
+    if len(args) <= 2:
+        raise ValueError("Usage: edit-address [name] [address separated with spaces]")
+    name = args[0]
+    address_str = ", ".join([str(address_part) for address_part in args[1:]])
+    record = contacts.find(Name(name))
+    if record:
+        record.edit_address(Address(address_str))
+        print(
+            f"{Fore.GREEN}Address for {Fore.CYAN}{name}{Fore.GREEN} changed to {Fore.CYAN}{address_str}{Style.RESET_ALL}"
+        )
+
+@input_error
 def delete_email_from_contact(contacts: AddressBook, *args: str) -> None:
     """Delete the email of a contact."""
     if len(args) != 1:
@@ -518,7 +578,6 @@ def show_email(address_book: AddressBook, *args: str) -> None:
             )
     else:
         raise KeyError(f"Name '{name}' not found.")
-
 
 @input_error
 def show_all_contacts(contacts: AddressBook) -> None:
@@ -573,9 +632,12 @@ def show_birthday(address_book: AddressBook, *args: str) -> None:
 
 
 @input_error
-def birthdays(address_book: AddressBook) -> None:
-    """Show the upcoming birthdays within the next 7 days."""
-    upcoming_birthdays = address_book.get_upcoming_birthdays()
+def birthdays(address_book: AddressBook, *args: str) -> None:
+    """Show the upcoming birthdays within a set amount of days."""
+    if len(args) != 1:
+        raise ValueError("Usage: birthdays [number of days]")
+    set_number = int(args[0])
+    upcoming_birthdays = address_book.get_upcoming_birthdays(set_number)
     if upcoming_birthdays:
         for entry in upcoming_birthdays:
             print(
@@ -583,7 +645,7 @@ def birthdays(address_book: AddressBook) -> None:
             )
     else:
         print(
-            f"{Fore.YELLOW}No upcoming birthdays in the next 7 days.{Style.RESET_ALL}"
+            f"{Fore.YELLOW}No upcoming birthdays in {set_number} days.{Style.RESET_ALL}"
         )
 
 
@@ -633,8 +695,13 @@ def help_command():
     print(
         f"email [name]{Fore.GREEN} - Show the email of a contact.{Style.RESET_ALL}"
     )
-    print(
-        f"all{Fore.GREEN} - Shows all contacts.{Style.RESET_ALL}")
+
+    print(f"add-address [name] [address]{Fore.GREEN} - Adds an address to a contact.{Style.RESET_ALL}"
+    )
+    print(f"edit-address [name] [address]{Fore.GREEN} - Edits the address of a contact{Style.RESET_ALL}"
+    )
+    print(f"all{Fore.GREEN} - Shows all contacts.{Style.RESET_ALL}")
+
     print(
         f"add-birthday [name] [birthday]{Fore.GREEN} - Adds a birthday to a contact.{Style.RESET_ALL}"
     )
@@ -642,7 +709,7 @@ def help_command():
         f"show-birthday [name]{Fore.GREEN} - Shows the birthday of a contact.{Style.RESET_ALL}"
     )
     print(
-        f"birthdays{Fore.GREEN} - Shows upcoming birthdays in the next 7 days.{Style.RESET_ALL}"
+        f"birthdays [number of days]{Fore.GREEN} - Shows upcoming birthdays in a set amount of days.{Style.RESET_ALL}"
     )
     print(
         f"delete-contact [name]{Fore.GREEN} - Deletes a contact by name.{Style.RESET_ALL}"
@@ -676,10 +743,12 @@ def main():
         "add-phone": lambda args: add_phone_to_contact(address_book, *args),
         "add-email": lambda args: add_email_to_contact(address_book, *args),
         "edit-email": lambda args: edit_email_of_contact(address_book, *args),
-        "email": lambda args: show_email(address_book, *args),
+        "add-address": lambda args: add_address_to_contact(address_book, *args),
+        "edit-address": lambda args: edit_address_of_contact(address_book, *args),
         "add-birthday": lambda args: add_birthday(address_book, *args),
         "show-birthday": lambda args: show_birthday(address_book, *args),
-        "birthdays": lambda _: birthdays(address_book),
+        "birthdays": lambda _: birthdays(address_book, *args),
+        "email": lambda args: show_email(address_book, *args),
         "all": lambda _: show_all_contacts(address_book),
         "delete-contact": lambda args: delete_contact(address_book, *args),
         "delete-email": lambda args: delete_email_from_contact(address_book, *args),
