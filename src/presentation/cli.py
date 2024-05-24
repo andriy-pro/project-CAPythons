@@ -7,7 +7,7 @@ from app.interfaces import Command
 # Add project root directory to sys.path
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 
-from app.entities import AddressBook
+from app.entities import AddressBook, NotesBook
 from app.services import handle_command
 from presentation.messages import Message
 from infrastructure.storage import FileStorage
@@ -28,6 +28,7 @@ def main():
     address_book = AddressBook(
         storage.load_contacts()
     )  # Load the address book from the file
+    notes_book = NotesBook()
 
     init(autoreset=True)  # Initialize colorama
 
@@ -56,6 +57,7 @@ def main():
             f"{Fore.YELLOW}{enter_command_prompt}{Style.RESET_ALL}"
         ).strip()
         command, args = parse_input(user_input)
-        # Save the contacts after handling the command
-        handle_command(command, address_book, *args)
-        storage.save_contacts(address_book)
+        handle_command(command, address_book, notes_book, *args)
+        storage.save_contacts(
+            address_book
+        )  # Save the contacts after handling the command

@@ -1,6 +1,9 @@
 from app import command_registry
 from app.interfaces import Command, FieldCommand
 from app.entities import Field, Name, Phone, Birthday, Record, AddressBook
+
+from app.entities import Field, Name, Phone, Birthday, Record, AddressBook, NotesBook
+from infrastructure.storage import FileStorage
 from presentation.messages import Message
 from app.command_registry import register_command, get_command
 from infrastructure.storage import FileStorage
@@ -12,6 +15,12 @@ import sys
 # Initialize settings
 settings = Settings()
 
+# Language mapping
+LANGUAGE_MAP = {
+    "en": {"en": "English", "uk": "Ukrainian"},
+    "uk": {"en": "англійська", "uk": "українська"},
+}
+
 
 # Decorator for handling errors in command functions
 def input_error(handler: Callable) -> Callable:
@@ -22,27 +31,43 @@ def input_error(handler: Callable) -> Callable:
             return handler(*args, **kwargs)
         except TypeError as e:
             print(
-                f"{Fore.RED}Error: Incorrect command.\n{Fore.MAGENTA}{e}{Style.RESET_ALL}"
+                f"{Fore.RED}Error: Incorrect command.\n{
+                    Fore.MAGENTA}{e}{Style.RESET_ALL}"
             )
         except ValueError as e:
             print(
-                f"{Fore.RED}Error: Incorrect arguments.\n{Fore.MAGENTA}{e}{Style.RESET_ALL}"
+                f"{Fore.RED}Error: Incorrect arguments.\n{
+                    Fore.MAGENTA}{e}{Style.RESET_ALL}"
             )
         except KeyError as e:
             print(
-                f"{Fore.RED}Error: Contact not found.\n{Fore.MAGENTA}{e}{Style.RESET_ALL}"
+                f"{Fore.RED}Error: Contact not found.\n{
+                    Fore.MAGENTA}{e}{Style.RESET_ALL}"
             )
         except IndexError as e:
             print(
-                f"{Fore.RED}Error: Index out of range.\n{Fore.MAGENTA}{e}{Style.RESET_ALL}"
+                f"{Fore.RED}Error: Index out of range.\n{
+                    Fore.MAGENTA}{e}{Style.RESET_ALL}"
             )
         except Exception as e:
             print(
-                f"{Fore.RED}An unexpected error occurred:\n{Fore.MAGENTA}{e}{Style.RESET_ALL}"
+                f"{Fore.RED}An unexpected error occurred:\n{
+                    Fore.MAGENTA}{e}{Style.RESET_ALL}"
             )
 
     return wrapper
 
+@input_error
+def handle_command(command: str, address_book: AddressBook, notes_book: NotesBook, *args: str) -> None:
+    """Handles the user command by calling the corresponding method."""
+    cmd = get_command(command)
+    if cmd:
+        cmd_instance = cmd(
+            notes_book if 'note' in command else address_book)
+        # cmd_instance = cmd(command.includes('note') ? notes_book: address_book)
+        cmd_instance.execute(*args)
+    else:
+        Message.error("incorrect_command", command=command)
 
 @register_command("hello")
 class HelloCommand(Command):
@@ -54,6 +79,50 @@ class HelloCommand(Command):
     def execute(self, *args: str) -> None:
         """Displays a greeting message."""
         Message.info("greeting")
+
+
+@register_command("add-note")
+class AddNoteCommand(Command):
+    def execute(self, *args: str) -> None:
+        """Додає нову замітку."""
+        if len(args) != 2:
+            Message.error("incorrect_arguments")
+            return
+        title, text = args
+        self.address_book.add_note(title, text)
+        Message.info("note_added", title=title)
+
+
+@register_command("edit-note")
+class EditNoteCommand(Command):
+    def execute(self, *args: str) -> None:
+        """Редагує існуючу замітку."""
+        print(self)
+        if len(args) != 2:
+            Message.error("incorrect_arguments")
+            return
+        title, new_title = args
+        self.address_book.edit_note(title, new_title)
+        Message.info("note_updated", title=title, new_title=new_title)
+
+
+@register_command("delete-note")
+class DeleteNoteCommand(Command):
+    def execute(self, *args: str) -> None:
+        """Видаляє існуючу замітку."""
+        if len(args) != 1:
+            Message.error("incorrect_arguments")
+            return
+        title = args[0]
+        self.address_book.delete_note(title)
+        Message.info("note_deleted", title=title)
+
+
+@register_command("display-notes")
+class DisplayNotesCommand(Command):
+    def execute(self, *args: str) -> None:
+        """Виводить всі замітки."""
+        self.address_book.display_notes()
 
 
 @register_command("add")
@@ -75,7 +144,8 @@ class AddContactCommand(Command):
                 Message.warning("contact_exists", name=name, phone=phone)
             else:
                 current_phone = record.phones[0].value if record.phones else "No phone"
-                Message.warning("contact_exists", name=name, phone=current_phone)
+                Message.warning("contact_exists", name=name,
+                                phone=current_phone)
         else:
             new_record = Record(Name(name))
             new_record.add_phone(Phone(phone))
@@ -126,17 +196,19 @@ class AddPhoneCommand(FieldCommand):
     def execute_field(self, record: Record, field: Field) -> None:
         """Adds a new phone number to an existing contact."""
         if any(p.value == field.value for p in record.phones):
-            Message.warning("contact_exists", name=record.name.value, phone=field.value)
+            Message.warning("contact_exists",
+                            name=record.name.value, phone=field.value)
         else:
             record.add_phone(field)
-            Message.info("contact_added", name=record.name.value, phone=field.value)
+            Message.info("contact_added", name=record.name.value,
+                         phone=field.value)
 
 
 @register_command("add-birthday")
 class AddBirthdayCommand(FieldCommand):
     description = {
         "en": "Adds a birthday to an existing contact.",
-        "uk": "Додає день народження до існуючого контакту.",
+        "uk": "Додає день народження до наявного контакту.",
     }
 
     def create_field(self, *args: str) -> Field:
@@ -186,6 +258,7 @@ class ShowPhoneCommand(Command):
 
 
 @register_command("exit")
+@register_command("quit")
 @register_command("close")
 class ExitCommand(Command):
     description = {
@@ -198,7 +271,7 @@ class ExitCommand(Command):
         storage = FileStorage()
         storage.save_contacts(self.address_book.data)
         Message.info("exit_message")
-        Command.exit_command_flag = True  # sys.exit()
+        sys.exit()
 
 
 @register_command("help")
@@ -211,7 +284,7 @@ class HelpCommand(Command):
     def execute(self, *args: str) -> None:
         """Displays this help message."""
         language = settings.language
-        for command_name, command_class in command_registry.command_registry.items():
+        for command_name, command_class in get_all_commands().items():
             description = command_class.description.get(
                 language, "No description available."
             )
@@ -240,12 +313,3 @@ class SetLanguageCommand(Command):
         Message.info("set_language", language=user_friendly_language_name)
 
 
-@input_error
-def handle_command(command: str, address_book: AddressBook, *args: str) -> None:
-    """Handles the user command by calling the corresponding method."""
-    cmd = get_command(command)
-    if cmd:
-        cmd_instance = cmd(address_book)
-        cmd_instance.execute(*args)
-    else:
-        Message.error("incorrect_command", command=command)

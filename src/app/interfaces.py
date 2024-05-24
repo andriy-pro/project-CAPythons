@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Dict
-from app.entities import Record, Field, AddressBook, Name
+from app.entities import Record, Field, AddressBook, Name, NotesBook
 import uuid
 from presentation.messages import Message
 
@@ -9,7 +9,11 @@ class Command(ABC):
     description = ""
     exit_command_flag = False
 
-    def __init__(self, address_book: AddressBook):
+    def __init__(
+        self,
+        address_book: AddressBook | NotesBook,
+        #  notes_book: NotesBook
+    ):
         self.address_book = address_book
 
     @abstractmethod

@@ -18,15 +18,39 @@ class Message:
     @classmethod
     def load_templates(cls, language):
         """Load message templates based on the selected language."""
-        base_path = os.path.dirname(os.path.abspath(__file__))
-        file_path = os.path.join(base_path, f"../resources/messages_{language}.json")
-        with open(file_path, "r", encoding="utf-8") as file:
-            cls.templates = json.load(file)
+        try:
+            with open(
+                os.path.join(
+                    os.path.dirname(
+                        __file__), f"../resources/messages_{language}.json"
+                ),
+                "r",
+                encoding="utf-8",
+            ) as file:
+                cls.templates = json.load(file)
+        except FileNotFoundError:
+            print(
+                f"Language file for '{
+                    language}' not found. Loading default (English) templates."
+            )
+            with open(
+                os.path.join(
+                    os.path.dirname(__file__), "../resources/messages_en.json"
+                ),
+                "r",
+                encoding="utf-8",
+            ) as file:
+                cls.templates = json.load(file)
 
     @classmethod
     def format_message(cls, template_name: str, **kwargs) -> str:
         """Format the message with provided parameters."""
-        template = cls.templates.get(template_name, "Message template not found")
+        # print(cls.templates)
+        # print("\n" + template_name)
+
+        # print(cls.templates.get('note_added'))
+        template = cls.templates.get(
+            template_name, "Message template not found")
         formatted_message = template.format(
             **{
                 k: f"{cls.colors['param']}{v}{cls.colors['reset']}{cls.colors['info']}"
