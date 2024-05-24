@@ -19,6 +19,7 @@ def register_command(name: str):
 
 def get_command(command_name: str) -> Optional[Command]:
     """
-    Повертає команду за її назвою або None, якщо команда не знайдена.
+    Повертає команду (екземпляр відповідного класу), що відповідає імені ("command_name") яке було передане.
+    Якщо назва команди відсутня (команда не знайдена) — повертає 'None'.
     """
     return command_registry.get(command_name)

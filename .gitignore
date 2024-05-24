@@ -167,5 +167,6 @@ cython_debug/
 # Folder with non-standard tests
 _tests/
 
-# Artefact of project-CAPythons
+# Artefacts of project-CAPythons
 addressbook.pkl
+settings.json

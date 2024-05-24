@@ -1,14 +1,19 @@
 from app import command_registry
 from app.interfaces import Command, FieldCommand
 from app.entities import Field, Name, Phone, Birthday, Record, AddressBook
-from infrastructure.storage import FileStorage
 from presentation.messages import Message
 from app.command_registry import register_command, get_command
+from infrastructure.storage import FileStorage
+from app.settings import Settings
 from typing import Callable
 from colorama import Fore, Style
+import sys
+
+# Initialize settings
+settings = Settings()
 
 
-# Декоратор для обробки помилок у функціях команд
+# Decorator for handling errors in command functions
 def input_error(handler: Callable) -> Callable:
     """Decorator for handling errors in command functions."""
 
@@ -39,19 +44,6 @@ def input_error(handler: Callable) -> Callable:
     return wrapper
 
 
-@input_error
-def handle_command(command: str, address_book: AddressBook, *args: str) -> None:
-    """Обробляє команду користувача, викликаючи відповідний метод."""
-    cmd = get_command(command)
-    if cmd:
-        cmd_instance = cmd(address_book)
-        cmd_instance.execute(*args)
-    else:
-        Message.error("incorrect_command", command=command)
-
-
-# review: very interesting approach, It’s not clear
-# why it was necessary to use classes and not class methods, for example
 @register_command("hello")
 class HelloCommand(Command):
     description = {
@@ -140,6 +132,38 @@ class AddPhoneCommand(FieldCommand):
             Message.info("contact_added", name=record.name.value, phone=field.value)
 
 
+@register_command("add-birthday")
+class AddBirthdayCommand(FieldCommand):
+    description = {
+        "en": "Adds a birthday to an existing contact.",
+        "uk": "Додає день народження до існуючого контакту.",
+    }
+
+    def create_field(self, *args: str) -> Field:
+        return Birthday(args[0])
+
+    def execute_field(self, record: Record, field: Field) -> None:
+        """Adds a birthday to an existing contact."""
+        record.add_birthday(field)
+        Message.info("birthday_set", name=record.name.value, birthday=field.value)
+
+
+@register_command("all")
+class ShowAllContactsCommand(Command):
+    description = {
+        "en": "Shows all contacts in the address book.",
+        "uk": "Показує всі контакти.",
+    }
+
+    def execute(self, *args: str) -> None:
+        """Shows all contacts in the address book."""
+        if self.address_book.data:
+            for record in self.address_book.data.values():
+                print(str(record))
+        else:
+            raise IndexError("No contacts available.")
+
+
 @register_command("show-phone")
 class ShowPhoneCommand(Command):
     description = {
@@ -159,42 +183,6 @@ class ShowPhoneCommand(Command):
             Message.info("phone_info", name=name, phone=phones)
         else:
             Message.error("contact_not_found", name=name)
-
-
-@register_command("add-birthday")
-class AddBirthdayCommand(FieldCommand):
-    description = {
-        "en": "Adds a birthday to an existing contact.",
-        "uk": "Додає день народження до існуючого контакту.",
-    }
-
-    def create_field(self, *args: str) -> Field:
-        return Birthday(args[0])
-
-    def execute_field(self, record: Record, field: Field) -> None:
-        """Adds a birthday to an existing contact."""
-        record.add_birthday(field)
-        Message.info("birthday_set", name=record.name.value, birthday=field.value)
-
-
-# rewiev: TODO I think all execute must have  *args parameter: def execute(self,self, *args: str)
-@register_command("all")
-class ShowAllContactsCommand(Command):
-    description = {
-        "en": "Shows all contacts in the address book.",
-        "uk": "Показує всі контакти.",
-    }
-
-    def execute(self, *args: str) -> None:
-        """Shows all contacts in the address book."""
-        if self.address_book.data:
-            for record in self.address_book.data.values():
-                print(str(record))
-        else:
-            raise IndexError("No contacts available.")
-
-
-exit_command_flag = False
 
 
 @register_command("exit")
@@ -222,9 +210,42 @@ class HelpCommand(Command):
 
     def execute(self, *args: str) -> None:
         """Displays this help message."""
-        language = args[0] if args else "en"
+        language = settings.language
         for command_name, command_class in command_registry.command_registry.items():
             description = command_class.description.get(
                 language, "No description available."
             )
             print(f"{command_name}: {description}")
+
+
+@register_command("set-language")
+class SetLanguageCommand(Command):
+    description = {
+        "en": "Sets the application language.",
+        "uk": "Встановлює мову застосунку.",
+    }
+
+    def execute(self, *args: str) -> None:
+        """Sets the application language."""
+        if len(args) != 1:
+            Message.error("incorrect_arguments")
+            return
+        language = args[0]
+        if language not in Message.LANGUAGE_MAP:
+            Message.error("incorrect_arguments")
+            return
+        settings.set_language(language)
+        Message.load_templates(language)
+        user_friendly_language_name = Message.LANGUAGE_MAP[language]
+        Message.info("set_language", language=user_friendly_language_name)
+
+
+@input_error
+def handle_command(command: str, address_book: AddressBook, *args: str) -> None:
+    """Handles the user command by calling the corresponding method."""
+    cmd = get_command(command)
+    if cmd:
+        cmd_instance = cmd(address_book)
+        cmd_instance.execute(*args)
+    else:
+        Message.error("incorrect_command", command=command)
