@@ -50,6 +50,7 @@ class Name(Field):
 
 
 class Phone(Field):
+    phone_pattern = re.compile(r"^\+?[1-9]\d{9,14}$")
     """Class for storing phone numbers. Inherits from Field.
 
     Parameters
@@ -62,10 +63,8 @@ class Phone(Field):
     ValueError
         Phone number must be 10-15 digits and may start with +.
     """
-
     def __init__(self, value: str):
-        phone_pattern = re.compile(r"^\+?[1-9]\d{9,14}$")
-        if not phone_pattern.match(value):
+        if not Phone.phone_pattern.match(value):
             raise ValueError("Phone number must be 10-15 digits and may start with +")
         super().__init__(value)
 
@@ -164,6 +163,18 @@ class Record:
         self.remove_phone(old_phone)
         self.add_phone(new_phone)
 
+    def delete_phone(self, phone_number: str):
+        """Delete a phone number from the contact."""
+        phone_to_delete = None
+        for phone in self.phones:
+            if phone.value == phone_number:
+                phone_to_delete = phone
+                break
+        if phone_to_delete:
+            self.phones.remove(phone_to_delete)
+        else:
+            raise ValueError(f"Phone number {phone_number} not found.")
+
     def add_email(self, email: Email):
         """Add an email address to the contact."""
         self.email = email
@@ -171,6 +182,10 @@ class Record:
     def edit_email(self, email: Email):
         """Edit the email address of the contact."""
         self.email = email
+
+    def delete_email(self):
+        """Delete the email address of the contact."""
+        self.email = None
 
     def add_address(self, address: Address):
         """Add the address of the contact"""
@@ -202,7 +217,7 @@ class AddressBook(UserDict):
         """Add a record to the address book."""
         self.data[record.name.value] = record
 
-    def delete(self, name: Name):
+    def delete_contact(self, name: Name):
         """Delete a record from the address book by name."""
         if name.value in self.data:
             del self.data[name.value]
@@ -399,6 +414,23 @@ def change_contact(contacts: AddressBook, *args: str) -> None:
     else:
         raise KeyError(f"Name '{name}' not found.")
 
+@input_error
+def delete_contact(contacts: AddressBook, *args: str) -> None:
+    """Delete a contact by name.
+
+    Parameters
+    ----------
+    contacts : AddressBook
+        The address book containing contacts.
+    args : str
+        The name and phone number of the contact.
+    """
+    if len(args) != 1:
+        raise ValueError("Usage: delete-contact [name]")
+    name = args[0]
+    contact_name = Name(name)
+    contacts.delete_contact(contact_name)
+    print(f"{Fore.GREEN}Contact {Fore.CYAN}{name}{Fore.GREEN} deleted{Style.RESET_ALL}")
 
 @input_error
 def show_phone(contacts: AddressBook, *args: str) -> None:
@@ -436,6 +468,22 @@ def add_phone_to_contact(address_book: AddressBook, *args: str) -> None:
         print(
             f"{Fore.GREEN}For user {Fore.CYAN}{name}{Fore.GREEN} added an additional phone number: {Fore.CYAN}{phone}{Style.RESET_ALL}"
         )
+    else:
+        raise KeyError(f"Name '{name}' not found.")
+
+@input_error
+def delete_phone_from_contact(contacts: AddressBook, *args: str) -> None:
+    """Delete a phone number from a contact."""
+    if len(args) != 2:
+        raise ValueError("Usage: delete-phone [name] [phone]")
+    name, phone = args
+    record = contacts.find(Name(name))
+    if record:
+        try:
+            record.delete_phone(phone)
+            print(f"{Fore.GREEN}Phone {Fore.CYAN}{phone}{Fore.GREEN} for {Fore.CYAN}{name}{Fore.GREEN} deleted{Style.RESET_ALL}")
+        except ValueError as e:
+            print(f"{Fore.RED}{str(e)}{Style.RESET_ALL}")
     else:
         raise KeyError(f"Name '{name}' not found.")
 
@@ -498,6 +546,38 @@ def edit_address_of_contact(contacts: AddressBook, *args: str) -> None:
         print(
             f"{Fore.GREEN}Address for {Fore.CYAN}{name}{Fore.GREEN} changed to {Fore.CYAN}{address_str}{Style.RESET_ALL}"
         )
+
+@input_error
+def delete_email_from_contact(contacts: AddressBook, *args: str) -> None:
+    """Delete the email of a contact."""
+    if len(args) != 1:
+        raise ValueError("Usage: delete-email [name]")
+    name = args[0]
+    record = contacts.find(Name(name))
+    if record:
+        record.delete_email()
+        print(f"{Fore.GREEN}Email for {Fore.CYAN}{name}{Fore.GREEN} deleted{Style.RESET_ALL}")
+    else:
+        raise KeyError(f"Name '{name}' not found.")
+    
+@input_error
+def show_email(address_book: AddressBook, *args: str) -> None:
+    """Show the email of a contact."""
+    if len(args) != 1:
+        raise ValueError("Usage: email [name]")
+    name = args[0]
+    record = address_book.find(Name(name))
+    if record:
+        if record.email:
+            print(
+                f"{Fore.GREEN}Email of {Fore.CYAN}{record.name.value}{Fore.GREEN}: {Fore.CYAN}{record.email.value}{Style.RESET_ALL}"
+            )
+        else:
+            print(
+                f"{Fore.YELLOW}No email set for {Fore.CYAN}{name}{Fore.YELLOW}.{Style.RESET_ALL}"
+            )
+    else:
+        raise KeyError(f"Name '{name}' not found.")
 
 @input_error
 def show_all_contacts(contacts: AddressBook) -> None:
@@ -606,15 +686,22 @@ def help_command():
     print(
         f"add-phone [name] [phone number]{Fore.GREEN} - Adds an additional phone to a contact.{Style.RESET_ALL}"
     )
-    print(f"add-email [name] [email]{Fore.GREEN} - Adds an email to a contact.{Style.RESET_ALL}"
+    print(
+        f"add-email [name] [email]{Fore.GREEN} - Adds an email to a contact.{Style.RESET_ALL}"
     )
-    print(f"edit-email [name] [new email]{Fore.GREEN} - Edits the email of a contact.{Style.RESET_ALL}"
+    print(
+        f"edit-email [name] [new email]{Fore.GREEN} - Edits the email of a contact.{Style.RESET_ALL}"
     )
+    print(
+        f"email [name]{Fore.GREEN} - Show the email of a contact.{Style.RESET_ALL}"
+    )
+
     print(f"add-address [name] [address]{Fore.GREEN} - Adds an address to a contact.{Style.RESET_ALL}"
     )
     print(f"edit-address [name] [address]{Fore.GREEN} - Edits the address of a contact{Style.RESET_ALL}"
     )
     print(f"all{Fore.GREEN} - Shows all contacts.{Style.RESET_ALL}")
+
     print(
         f"add-birthday [name] [birthday]{Fore.GREEN} - Adds a birthday to a contact.{Style.RESET_ALL}"
     )
@@ -623,6 +710,15 @@ def help_command():
     )
     print(
         f"birthdays [number of days]{Fore.GREEN} - Shows upcoming birthdays in a set amount of days.{Style.RESET_ALL}"
+    )
+    print(
+        f"delete-contact [name]{Fore.GREEN} - Deletes a contact by name.{Style.RESET_ALL}"
+    )
+    print(
+        f"delete-email [name]{Fore.GREEN} - Deletes the email of a contact.{Style.RESET_ALL}"
+    )
+    print(
+        f"delete-phone [name] [phone number]{Fore.GREEN} - Deletes a specific phone number from a contact.{Style.RESET_ALL}"
     )
     print(f"close, exit, quit{Fore.GREEN} - Exits the program.{Style.RESET_ALL}")
     print(f"help{Fore.GREEN} - Displays a list of available commands.{Style.RESET_ALL}")
@@ -649,10 +745,14 @@ def main():
         "edit-email": lambda args: edit_email_of_contact(address_book, *args),
         "add-address": lambda args: add_address_to_contact(address_book, *args),
         "edit-address": lambda args: edit_address_of_contact(address_book, *args),
-        "all": lambda _: show_all_contacts(address_book),
         "add-birthday": lambda args: add_birthday(address_book, *args),
         "show-birthday": lambda args: show_birthday(address_book, *args),
         "birthdays": lambda _: birthdays(address_book, *args),
+        "email": lambda args: show_email(address_book, *args),
+        "all": lambda _: show_all_contacts(address_book),
+        "delete-contact": lambda args: delete_contact(address_book, *args),
+        "delete-email": lambda args: delete_email_from_contact(address_book, *args),
+        "delete-phone": lambda args: delete_phone_from_contact(address_book, args[0], args[1]),
         "close": lambda _: handle_exit(address_book),
         "exit": lambda _: handle_exit(address_book),
         "quit": lambda _: handle_exit(address_book),
