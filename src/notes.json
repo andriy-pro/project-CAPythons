@@ -1,12 +1,14 @@
 [
-    {
-        "id": "56a16fc9-aa57-4ea6-87c0-55c080a5fad1",
-        "title": "new_title",
-        "text": "new_title asdasdasd dsdsad asdasd as sad"
-    },
-    {
-        "id": "a03a0dca-0e8a-417b-bea1-2f79db060a01",
-        "title": "sadsad",
-        "text": "asdsad"
-    }
+  {
+    "id": "f643f5e4-c2f6-4a5b-8113-e4a64f215968",
+    "title": "title",
+    "text": "text",
+    "tags": ["#tag1", "#tag2"]
+  },
+  {
+    "id": "e3198d11-c229-4e31-9c27-cefc46e57a12",
+    "title": "title",
+    "text": "text",
+    "tags": ["#tag1"]
+  }
 ]

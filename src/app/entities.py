@@ -6,15 +6,17 @@ from typing import List, Optional, Dict, Any
 from collections import UserDict
 from colorama import Fore, Style
 
+
 class Field:
     def __init__(self, value: str):
         self.value = value
 
     def __str__(self):
         return str(self.value)
-    
+
     def to_dict(self):
         return self.value
+
 
 class Name(Field):
     def __init__(self, value: str):
@@ -22,11 +24,13 @@ class Name(Field):
             raise ValueError("Name cannot be empty.")
         super().__init__(value)
 
+
 class Phone(Field):
     def __init__(self, value: str):
         if not value.isdigit() or len(value.strip()) != 10:
             raise ValueError("Phone number must be 10 digits")
         super().__init__(value)
+
 
 class Birthday(Field):
     def __init__(self, value: str):
@@ -35,6 +39,7 @@ class Birthday(Field):
         except ValueError:
             raise ValueError("Invalid date format. Use DD.MM.YYYY")
         super().__init__(value)
+
 
 class Record:
     def __init__(self, name: Name, **fields: Any):
@@ -73,6 +78,7 @@ class Record:
         field_str = "; ".join(field_strings)
         return f"{Fore.GREEN}Contact {field_str}{Style.RESET_ALL}"
 
+
 class AddressBook(UserDict):
     def add_record(self, record: Record):
         self.data[record.id] = record
@@ -95,11 +101,13 @@ class AddressBook(UserDict):
 
         for record in self.data.values():
             if "birthday" in record.fields:
-                birthday = datetime.strptime(record.fields["birthday"].value, "%d.%m.%Y").date()
+                birthday = datetime.strptime(
+                    record.fields["birthday"].value, "%d.%m.%Y").date()
                 birthday_this_year = birthday.replace(year=today.year)
 
                 if birthday_this_year < today:
-                    birthday_this_year = birthday_this_year.replace(year=today.year + 1)
+                    birthday_this_year = birthday_this_year.replace(
+                        year=today.year + 1)
 
                 day_difference = (birthday_this_year - today).days
                 if 0 <= day_difference <= 7:
@@ -124,48 +132,6 @@ class AddressBook(UserDict):
         return "\n".join(str(record) for record in self.data.values())
 
 
-
-
-# class NotesBook:
-#     def __init__(self, file_name: str = 'notes.json') -> None:
-#         self.file_name = file_name
-#         self.notes: Dict[str, str] = self.load_notes()
-
-#     def load_notes(self) -> Dict[str, str]:
-#         if os.path.exists(self.file_name):
-#             with open(self.file_name, 'r', encoding='utf-8') as file:
-#                 return json.load(file)
-#         return {}
-
-#     def save_notes(self) -> None:
-#         with open(self.file_name, 'w', encoding='utf-8') as file:
-#             json.dump(self.notes, file, ensure_ascii=False, indent=4)
-
-#     def add_note(self, title: str, content: str) -> None:
-#         self.notes[title] = content
-#         self.save_notes()
-
-#     def edit_note(self, title: str, new_content: str) -> None:
-#         if title in self.notes:
-#             self.notes[title] = new_content
-#             self.save_notes()
-#         else:
-#             raise KeyError(f"Note with title '{title}' does not exist.")
-
-#     def delete_note(self, title: str) -> None:
-#         if title in self.notes:
-#             del self.notes[title]
-#             self.save_notes()
-#         else:
-#             raise KeyError(f"Note with title '{title}' does not exist.")
-
-#     def display_notes(self) -> None:
-#         if not self.notes:
-#             raise ValueError("No notes to display.")
-#         else:
-#             for title, content in self.notes.items():
-#                 print(f"Title: {title}\nContent: {content}\n{'-'*40}")
-
 class NotesBook:
     def __init__(self, file_name: str = 'notes.json') -> None:
         self.file_name = file_name
@@ -181,27 +147,22 @@ class NotesBook:
         with open(self.file_name, 'w', encoding='utf-8') as file:
             json.dump(self.notes, file, ensure_ascii=False, indent=4)
 
-    def add_note(self, title: str, text: str,
-                 #   tags: List[str]
-                 ) -> None:
+    def add_note(self, title: str, text: str, tags: List[str]) -> None:
         note_id = str(uuid.uuid4())
         new_note = {
             "id": note_id,
             "title": title,
             "text": text,
-            # "tags": tags
+            "tags": tags
         }
         self.notes.append(new_note)
         self.save_notes()
 
-    def edit_note(self, note_id: str, new_title: str, new_text: str,
-                  #    new_tags: List[str]
-                  ) -> None:
+    def edit_note(self, note_id: str, new_title: str, new_text: str) -> None:
         for note in self.notes:
             if note['id'] == note_id:
                 note['title'] = new_title
                 note['text'] = new_text
-                # note['tags'] = new_tags
                 self.save_notes()
                 return
         raise KeyError(f"Note with ID '{note_id}' does not exist.")
@@ -217,6 +178,6 @@ class NotesBook:
             for note in self.notes:
                 # print(f"ID: {note['id']}\nTitle: {note['title']}\nText: {
                 #       note['text']}\nTags: {', '.join(note['tags'])}\n{'-'*40}")
-                print(f"\nID: {note['id']}\nTitle: {note['title']}\nText: {
-                    note['text']})\n")
+                print(f"\nID: {note['id']}\nTitle: {
+                      note['title']}\nText: {note['text']}\n")
                 print('-'*40)

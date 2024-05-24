@@ -1,4 +1,5 @@
 from app import command_registry
+import re
 from app.interfaces import Command, FieldCommand
 from app.entities import Field, Name, Phone, Birthday, Record, AddressBook
 from app.entities import Field, Name, Phone, Birthday, Record, AddressBook, NotesBook
@@ -56,6 +57,7 @@ def input_error(handler: Callable) -> Callable:
 
     return wrapper
 
+
 @input_error
 def handle_command(command: str, address_book: AddressBook, notes_book: NotesBook, *args: str) -> None:
     """Handles the user command by calling the corresponding method."""
@@ -67,6 +69,7 @@ def handle_command(command: str, address_book: AddressBook, notes_book: NotesBoo
         cmd_instance.execute(*args)
     else:
         Message.error("incorrect_command", command=command)
+
 
 @register_command("hello")
 class HelloCommand(Command):
@@ -89,12 +92,20 @@ class AddNoteCommand(Command):
 
     def execute(self, *args: tuple) -> None:
         """Додає нову нотатку."""
+        def remove_hash_words(s: str) -> str:
+            return re.sub(r'\s*#[\w-]+', '', s).strip()
+
+        def extract_hash_words(s: str) -> list:
+            hash_words = re.findall(r'#[\w-]+', s)
+            return hash_words
+
         title = args[0]
-        text = ' '.join(args[1:])
+        text = remove_hash_words(' '.join(args[1:]))
+        tags = extract_hash_words(' '.join(args[1:]))
         if len(args) < 2:
             Message.error("incorrect_arguments")
             return
-        self.book_type.add_note(title, text)
+        self.book_type.add_note(title, text, tags)
         Message.info("note_added", title=title)
 
 
@@ -195,7 +206,8 @@ class ChangeContactCommand(Command):
                 Message.warning("contact_exists", name=name, phone=new_phone)
             else:
                 record.edit_phone(record.phones[0], Phone(new_phone))
-                Message.info("contact_updated", name=name, old_phone=current_phone, new_phone=new_phone)
+                Message.info("contact_updated", name=name,
+                             old_phone=current_phone, new_phone=new_phone)
         else:
             Message.error("contact_not_found", name=name)
 
@@ -234,7 +246,8 @@ class AddBirthdayCommand(FieldCommand):
     def execute_field(self, record: Record, field: Field) -> None:
         """Adds a birthday to an existing contact."""
         record.add_birthday(field)
-        Message.info("birthday_set", name=record.name.value, birthday=field.value)
+        Message.info("birthday_set", name=record.name.value,
+                     birthday=field.value)
 
 
 @register_command("all")
@@ -301,10 +314,9 @@ class HelpCommand(Command):
         """Displays this help message."""
         language = settings.language
         for command_name, command_class in command_registry.command_registry.items():
-            description = command_class.description.get(language, "No description available.")
+            description = command_class.description.get(
+                language, "No description available.")
             print(f"{command_name}: {description}")
-
-
 
 
 @register_command("set-language")
@@ -327,5 +339,3 @@ class SetLanguageCommand(Command):
         Message.load_templates(language)
         user_friendly_language_name = Message.LANGUAGE_MAP[language]
         Message.info("set_language", language=user_friendly_language_name)
-
-
