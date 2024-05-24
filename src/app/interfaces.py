@@ -13,10 +13,10 @@ from presentation.messages import Message
 class Command(ABC):
     exit_command_flag = False
 
-    def __init__(self, address_book: AddressBook | NotesBook,
+    def __init__(self, book_type: AddressBook | NotesBook,
                  #  notes_book: NotesBook
                  ):
-        self.address_book = address_book
+        self.book_type = book_type
         # self.notes_book = notes_book
 
     @abstractmethod
@@ -35,7 +35,7 @@ class FieldCommand(Command, ABC):
             Message.error("incorrect_arguments")
             return
         name, *field_args = args
-        record = self.address_book.find_by_name(Name(name))
+        record = self.book_type.find_by_name(Name(name))
         if not record:
             Message.error("contact_not_found", name=name)
             return
