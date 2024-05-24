@@ -11,5 +11,6 @@ setup(
         'console_scripts':
             ['CAPythonsBook = CAPythonsBook.src.presentation.cli:main']
         },
-    include_package_data=True
+    include_package_data=True,
+    #test_suite='tests/test_CLI.py'
 )

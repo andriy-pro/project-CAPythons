@@ -62,3 +62,34 @@ tests/ # Імена файлів з тестами могли б вигляда�
 Or in vscode file->preference->setting, then find unittestArgs and write src\tests in the line after -s
 
 Instruction: https://code.visualstudio.com/docs/python/testing
+
+### Make package
+
+Docs:
+https://packaging.python.org/en/latest/flow/
+https://packaging.python.org/en/latest/tutorials/packaging-projects/
+https://packaging.python.org/en/latest/specifications/pypirc/
+https://hatch.pypa.io/latest/config/build/#pyprojecttoml_3
+https://twine.readthedocs.io/en/stable/
+
+File .pypirc at $home:
+
+'''[distutils]
+index-servers =
+    pypi
+    testpypi
+
+[pypi]
+repository = https://upload.pypi.org/legacy/
+
+[testpypi]
+repository = https://test.pypi.org/legacy/
+username = __token__
+password = <token> 
+'''
+
+Command:
+
+twine upload -r testpypi dist/* --verbose
+python -m build
+
