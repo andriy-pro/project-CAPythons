@@ -1,5 +1,5 @@
 from typing import Dict, Optional
-from app.interfaces import Command
+from CAPyBook.app.interfaces import Command
 
 # Реєстр для зберігання команд
 command_registry: Dict[str, Command] = {}

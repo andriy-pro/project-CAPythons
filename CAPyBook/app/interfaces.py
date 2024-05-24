@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Dict
-from app.entities import Record, Field, AddressBook, Name, NotesBook
 import uuid
-from presentation.messages import Message
+from CAPyBook.presentation.messages import Message
+from CAPyBook.app.entities import Record, Field, AddressBook, Name, NotesBook
 
 
 class Command(ABC):

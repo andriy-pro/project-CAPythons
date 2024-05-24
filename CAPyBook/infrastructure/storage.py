@@ -1,7 +1,8 @@
 import json
 import uuid
 from typing import Dict
-from app.entities import Record, AddressBook, Name, Phone, Birthday, Field
+
+from CAPyBook.app.entities import Record, AddressBook, Name, Phone, Birthday, Field
 
 
 class FileStorage:

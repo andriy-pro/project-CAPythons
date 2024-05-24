@@ -1,16 +1,19 @@
-from app import command_registry
+
 import re
-from app.interfaces import Command, FieldCommand
-from app.entities import Field, Name, Phone, Birthday, Record, AddressBook
-from app.entities import Field, Name, Phone, Birthday, Record, AddressBook, NotesBook
-from infrastructure.storage import FileStorage
-from presentation.messages import Message
-from app.command_registry import register_command, get_command
-from infrastructure.storage import FileStorage
-from app.settings import Settings
 from typing import Callable
 from colorama import Fore, Style
 import sys
+
+from CAPyBook.app import command_registry
+from CAPyBook.app.interfaces import Command, FieldCommand
+from CAPyBook.app.entities import Field, Name, Phone, Birthday, Record, AddressBook
+from CAPyBook.app.entities import Field, Name, Phone, Birthday, Record, AddressBook, NotesBook
+from CAPyBook.infrastructure.storage import FileStorage
+from CAPyBook.presentation.messages import Message
+from CAPyBook.app.command_registry import register_command, get_command
+from CAPyBook.infrastructure.storage import FileStorage
+from CAPyBook.app.settings import Settings
+
 
 # Initialize settings
 settings = Settings()

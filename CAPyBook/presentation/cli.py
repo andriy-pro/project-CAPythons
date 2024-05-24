@@ -1,18 +1,18 @@
 import sys
 import os
 from typing import Tuple
+from colorama import init, Fore, Style
 
-from app.interfaces import Command
 
 # Add project root directory to sys.path
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+from CAPyBook.app.interfaces import Command
+from CAPyBook.app.entities import AddressBook, NotesBook
+from CAPyBook.app.services import handle_command
+from CAPyBook.presentation.messages import Message
+from CAPyBook.infrastructure.storage import FileStorage
+from CAPyBook.app.settings import Settings
 
-from app.entities import AddressBook, NotesBook
-from app.services import handle_command
-from presentation.messages import Message
-from infrastructure.storage import FileStorage
-from app.settings import Settings
-from colorama import init, Fore, Style
 
 
 def parse_input(user_input: str) -> Tuple[str, list[str]]:
