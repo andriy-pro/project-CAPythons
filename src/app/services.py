@@ -101,7 +101,6 @@ class AddNoteCommand(Command):
 
         title = args[0]
         text = remove_hash_words(' '.join(args[1:]))
-        # print(' '.join(args[1:]))
         tags = extract_hash_words(' '.join(args[1:]))
         if len(args) < 2:
             Message.error("incorrect_arguments")
