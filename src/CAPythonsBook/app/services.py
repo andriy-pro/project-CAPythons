@@ -191,6 +191,52 @@ class AddBirthdayCommand(FieldCommand):
                      birthday=field.value)
 
 
+@register_command("add-email")
+class AddEmailToContactCommand(Command):
+    description = {
+        "en": "Adds an email to a contact.",
+        "uk": "Додає електронну пошту до контакту.",
+    }
+
+    def execute(self, *args: str) -> None:
+        """Додає електронну пошту до контакту."""
+        if len(args) != 2:
+            Message.error("incorrect_arguments")
+            return
+
+        name, email = args
+        record = self.book_type.find_by_name(Name(name))
+
+        if record:
+            record.add_email(Email(email))
+            Message.info("email_added", name=name, email=email)
+        else:
+            Message.error("contact_not_found", name=name)
+
+
+@register_command("edit-email")
+class EditEmailOfContactCommand(Command):
+    description = {
+        "en": "Edits the email of a contact.",
+        "uk": "Редагує електронну пошту контакту.",
+    }
+
+    def execute(self, *args: str) -> None:
+        """Редагує електронну пошту контакту."""
+        if len(args) != 2:
+            Message.error("incorrect_arguments")
+            return
+
+        name, email = args
+        record = self.book_type.find_by_name(Name(name))
+
+        if record:
+            record.edit_email(Email(email))
+            Message.info("email_changed", name=name, email=email)
+        else:
+            Message.error("contact_not_found", name=name)
+
+
 @register_command("all")
 class ShowAllContactsCommand(Command):
     description = {
