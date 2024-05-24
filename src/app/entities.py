@@ -122,74 +122,97 @@ class AddressBook(UserDict):
         return "\n".join(str(record) for record in self.data.values())
 
 
+# class NotesBook:
+#     def __init__(self, file_name: str = 'notes.json') -> None:
+#         self.file_name = file_name
+#         self.notes: Dict[str, str] = self.load_notes()
+
+#     def load_notes(self) -> Dict[str, str]:
+#         if os.path.exists(self.file_name):
+#             with open(self.file_name, 'r', encoding='utf-8') as file:
+#                 return json.load(file)
+#         return {}
+
+#     def save_notes(self) -> None:
+#         with open(self.file_name, 'w', encoding='utf-8') as file:
+#             json.dump(self.notes, file, ensure_ascii=False, indent=4)
+
+#     def add_note(self, title: str, content: str) -> None:
+#         self.notes[title] = content
+#         self.save_notes()
+
+#     def edit_note(self, title: str, new_content: str) -> None:
+#         if title in self.notes:
+#             self.notes[title] = new_content
+#             self.save_notes()
+#         else:
+#             raise KeyError(f"Note with title '{title}' does not exist.")
+
+#     def delete_note(self, title: str) -> None:
+#         if title in self.notes:
+#             del self.notes[title]
+#             self.save_notes()
+#         else:
+#             raise KeyError(f"Note with title '{title}' does not exist.")
+
+#     def display_notes(self) -> None:
+#         if not self.notes:
+#             raise ValueError("No notes to display.")
+#         else:
+#             for title, content in self.notes.items():
+#                 print(f"Title: {title}\nContent: {content}\n{'-'*40}")
+
 class NotesBook:
     def __init__(self, file_name: str = 'notes.json') -> None:
         self.file_name = file_name
-        self.notes: Dict[str, str] = self.load_notes()
+        self.notes: List[Dict[str, str]] = self.load_notes()
 
-    def load_notes(self) -> Dict[str, str]:
+    def load_notes(self) -> List[Dict[str, str]]:
         if os.path.exists(self.file_name):
             with open(self.file_name, 'r', encoding='utf-8') as file:
                 return json.load(file)
-        return {}
+        return []
 
     def save_notes(self) -> None:
         with open(self.file_name, 'w', encoding='utf-8') as file:
             json.dump(self.notes, file, ensure_ascii=False, indent=4)
 
-    def add_note(self, title: str, content: str) -> None:
-        self.notes[title] = content
+    def add_note(self, title: str, text: str,
+                 #   tags: List[str]
+                 ) -> None:
+        note_id = str(uuid.uuid4())
+        new_note = {
+            "id": note_id,
+            "title": title,
+            "text": text,
+            # "tags": tags
+        }
+        self.notes.append(new_note)
         self.save_notes()
 
-    def edit_note(self, title: str, new_content: str) -> None:
-        if title in self.notes:
-            self.notes[title] = new_content
-            self.save_notes()
-        else:
-            raise KeyError(f"Note with title '{title}' does not exist.")
+    def edit_note(self, note_id: str, new_title: str, new_text: str,
+                  #    new_tags: List[str]
+                  ) -> None:
+        for note in self.notes:
+            if note['id'] == note_id:
+                note['title'] = new_title
+                note['text'] = new_text
+                # note['tags'] = new_tags
+                self.save_notes()
+                return
+        raise KeyError(f"Note with ID '{note_id}' does not exist.")
 
-    def delete_note(self, title: str) -> None:
-        if title in self.notes:
-            del self.notes[title]
-            self.save_notes()
-        else:
-            raise KeyError(f"Note with title '{title}' does not exist.")
+    def delete_note(self, note_id: str) -> None:
+        self.notes = [note for note in self.notes if note['id'] != note_id]
+        self.save_notes()
 
     def display_notes(self) -> None:
         if not self.notes:
-            raise ValueError("No notes to display.")
+            raise ValueError("No notes available.")
         else:
-            for title, content in self.notes.items():
-                print(f"Title: {title}\nContent: {content}\n{'-'*40}")
-
-
-# if __name__ == "__main__":
-#     manager = NotesBook()
-
-#     while True:
-#         print("\nMenu:")
-#         print("1. Add a note")
-#         print("2. Edit a note")
-#         print("3. Delete a note")
-#         print("4. Display all notes")
-#         print("5. Exit")
-
-#         choice = input("Choose an option: ")
-
-#         if choice == '1':
-#             title = input("Enter note title: ")
-#             content = input("Enter note content: ")
-#             manager.add_note(title, content)
-#         elif choice == '2':
-#             title = input("Enter note title to edit: ")
-#             new_content = input("Enter new note content: ")
-#             manager.edit_note(title, new_content)
-#         elif choice == '3':
-#             title = input("Enter note title to delete: ")
-#             manager.delete_note(title)
-#         elif choice == '4':
-#             manager.display_notes()
-#         elif choice == '5':
-#             break
-#         else:
-#             print("Invalid choice. Please try again.")
+            for note in self.notes:
+                # print(f"ID: {note['id']}\nTitle: {note['title']}\nText: {
+                #       note['text']}\nTags: {', '.join(note['tags'])}\n{'-'*40}")
+                print(f"\nID: {note['id']}\nTitle: {note['title']}\nText: {
+                    note['text']})\n")
+                print('-'*40)

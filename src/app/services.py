@@ -83,38 +83,41 @@ class HelloCommand(Command):
 
 @register_command("add-note")
 class AddNoteCommand(Command):
-    def execute(self, *args: str) -> None:
+    def execute(self, *args: tuple) -> None:
         """Додає нову замітку."""
-        if len(args) != 2:
+        title = args[0]
+        text = ' '.join(args[1:])
+        if len(args) < 2:
             Message.error("incorrect_arguments")
             return
-        title, text = args
-        self.address_book.add_note(title, text)
+        self.book_type.add_note(title, text)
         Message.info("note_added", title=title)
 
 
 @register_command("edit-note")
 class EditNoteCommand(Command):
-    def execute(self, *args: str) -> None:
+    def execute(self, *args: tuple) -> None:
         """Редагує існуючу замітку."""
-        print(self)
-        if len(args) != 2:
+        id_note = args[0]
+        title = args[1]
+        text = ' '.join(args[2:])
+        if len(args) < 2:
             Message.error("incorrect_arguments")
             return
-        title, new_title = args
-        self.address_book.edit_note(title, new_title)
-        Message.info("note_updated", title=title, new_title=new_title)
+
+        self.book_type.edit_note(id_note, title, text)
+        Message.info("note_updated", title=title, text=text)
 
 
 @register_command("delete-note")
 class DeleteNoteCommand(Command):
-    def execute(self, *args: str) -> None:
+    def execute(self, *args: tuple) -> None:
         """Видаляє існуючу замітку."""
         if len(args) != 1:
             Message.error("incorrect_arguments")
             return
         title = args[0]
-        self.address_book.delete_note(title)
+        self.book_type.delete_note(title)
         Message.info("note_deleted", title=title)
 
 
@@ -122,7 +125,7 @@ class DeleteNoteCommand(Command):
 class DisplayNotesCommand(Command):
     def execute(self, *args: str) -> None:
         """Виводить всі замітки."""
-        self.address_book.display_notes()
+        self.book_type.display_notes()
 
 
 @register_command("add")
@@ -138,7 +141,7 @@ class AddContactCommand(Command):
             Message.error("incorrect_arguments")
             return
         name, phone = args
-        record = self.address_book.find_by_name(Name(name))
+        record = self.book_type.find_by_name(Name(name))
         if record:
             if any(p.value == phone for p in record.phones):
                 Message.warning("contact_exists", name=name, phone=phone)
@@ -149,7 +152,7 @@ class AddContactCommand(Command):
         else:
             new_record = Record(Name(name))
             new_record.add_phone(Phone(phone))
-            self.address_book.add_record(new_record)
+            self.book_type.add_record(new_record)
             Message.info("contact_added", name=name, phone=phone)
 
 
@@ -166,7 +169,7 @@ class ChangeContactCommand(Command):
             Message.error("incorrect_arguments")
             return
         name, new_phone = args
-        record = self.address_book.find_by_name(Name(name))
+        record = self.book_type.find_by_name(Name(name))
         if record:
             current_phone = record.phones[0].value if record.phones else None
             if new_phone == current_phone:
@@ -249,7 +252,7 @@ class ShowPhoneCommand(Command):
             Message.error("incorrect_arguments")
             return
         name = args[0]
-        record = self.address_book.find_by_name(Name(name))
+        record = self.book_type.find_by_name(Name(name))
         if record:
             phones = "; ".join([phone.value for phone in record.phones])
             Message.info("phone_info", name=name, phone=phones)
@@ -269,7 +272,7 @@ class ExitCommand(Command):
     def execute(self, *args: str) -> None:
         """Saves the address book and exits the program."""
         storage = FileStorage()
-        storage.save_contacts(self.address_book.data)
+        storage.save_contacts(self.book_type.data)
         Message.info("exit_message")
         sys.exit()
 
