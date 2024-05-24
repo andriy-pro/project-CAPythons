@@ -1,7 +1,6 @@
 from app import command_registry
 from app.interfaces import Command, FieldCommand
 from app.entities import Field, Name, Phone, Birthday, Record, AddressBook
-
 from app.entities import Field, Name, Phone, Birthday, Record, AddressBook, NotesBook
 from infrastructure.storage import FileStorage
 from presentation.messages import Message
@@ -83,8 +82,13 @@ class HelloCommand(Command):
 
 @register_command("add-note")
 class AddNoteCommand(Command):
+    description = {
+        "en": "Adds a new note.",
+        "uk": "Додає нову нотатку.",
+    }
+
     def execute(self, *args: tuple) -> None:
-        """Додає нову замітку."""
+        """Додає нову нотатку."""
         title = args[0]
         text = ' '.join(args[1:])
         if len(args) < 2:
@@ -96,8 +100,13 @@ class AddNoteCommand(Command):
 
 @register_command("edit-note")
 class EditNoteCommand(Command):
+    description = {
+        "en": "Edits an existing note.",
+        "uk": "Редагує наявну нотатку.",
+    }
+
     def execute(self, *args: tuple) -> None:
-        """Редагує існуючу замітку."""
+        """Редагує наявну нотатку."""
         id_note = args[0]
         title = args[1]
         text = ' '.join(args[2:])
@@ -111,8 +120,13 @@ class EditNoteCommand(Command):
 
 @register_command("delete-note")
 class DeleteNoteCommand(Command):
+    description = {
+        "en": "Deletes an existing note.",
+        "uk": "Видаляє наявну нотатку.",
+    }
+
     def execute(self, *args: tuple) -> None:
-        """Видаляє існуючу замітку."""
+        """Видаляє наявну нотатку."""
         if len(args) != 1:
             Message.error("incorrect_arguments")
             return
@@ -123,8 +137,13 @@ class DeleteNoteCommand(Command):
 
 @register_command("display-notes")
 class DisplayNotesCommand(Command):
+    description = {
+        "en":  "Displays all notes.",
+        "uk": "Виводить всі нотатки."
+    }
+
     def execute(self, *args: str) -> None:
-        """Виводить всі замітки."""
+        """Виводить всі нотатки."""
         self.book_type.display_notes()
 
 
@@ -160,7 +179,7 @@ class AddContactCommand(Command):
 class ChangeContactCommand(Command):
     description = {
         "en": "Changes the phone number of an existing contact.",
-        "uk": "Змінює номер телефону існуючого контакту.",
+        "uk": "Змінює номер телефону існуючого контакту."
     }
 
     def execute(self, *args: str) -> None:
@@ -176,12 +195,7 @@ class ChangeContactCommand(Command):
                 Message.warning("contact_exists", name=name, phone=new_phone)
             else:
                 record.edit_phone(record.phones[0], Phone(new_phone))
-                Message.info(
-                    "contact_updated",
-                    name=name,
-                    old_phone=current_phone,
-                    new_phone=new_phone,
-                )
+                Message.info("contact_updated", name=name, old_phone=current_phone, new_phone=new_phone)
         else:
             Message.error("contact_not_found", name=name)
 
@@ -190,7 +204,7 @@ class ChangeContactCommand(Command):
 class AddPhoneCommand(FieldCommand):
     description = {
         "en": "Adds a new phone number to an existing contact.",
-        "uk": "Додає новий номер телефону до існуючого контакту.",
+        "uk": "Додає новий номер телефону до наявного контакту.",
     }
 
     def create_field(self, *args: str) -> Field:
@@ -232,8 +246,8 @@ class ShowAllContactsCommand(Command):
 
     def execute(self, *args: str) -> None:
         """Shows all contacts in the address book."""
-        if self.address_book.data:
-            for record in self.address_book.data.values():
+        if self.book_type.data:
+            for record in self.book_type.data.values():
                 print(str(record))
         else:
             raise IndexError("No contacts available.")
@@ -261,7 +275,6 @@ class ShowPhoneCommand(Command):
 
 
 @register_command("exit")
-@register_command("quit")
 @register_command("close")
 class ExitCommand(Command):
     description = {
@@ -271,7 +284,7 @@ class ExitCommand(Command):
 
     def execute(self, *args: str) -> None:
         """Saves the address book and exits the program."""
-        storage = FileStorage()
+        storage = FileStorage("addressbook.json")
         storage.save_contacts(self.book_type.data)
         Message.info("exit_message")
         sys.exit()
@@ -281,24 +294,24 @@ class ExitCommand(Command):
 class HelpCommand(Command):
     description = {
         "en": "Displays this help message.",
-        "uk": "Виводить це повідомлення про доступні команди.",
+        "uk": "Виводить це повідомлення про допомогу."
     }
 
     def execute(self, *args: str) -> None:
         """Displays this help message."""
         language = settings.language
-        for command_name, command_class in get_all_commands().items():
-            description = command_class.description.get(
-                language, "No description available."
-            )
+        for command_name, command_class in command_registry.command_registry.items():
+            description = command_class.description.get(language, "No description available.")
             print(f"{command_name}: {description}")
+
+
 
 
 @register_command("set-language")
 class SetLanguageCommand(Command):
     description = {
         "en": "Sets the application language.",
-        "uk": "Встановлює мову застосунку.",
+        "uk": "Встановлює мову застосунку."
     }
 
     def execute(self, *args: str) -> None:
@@ -307,7 +320,7 @@ class SetLanguageCommand(Command):
             Message.error("incorrect_arguments")
             return
         language = args[0]
-        if language not in Message.LANGUAGE_MAP:
+        if language not in LANGUAGE_MAP[settings.language]:
             Message.error("incorrect_arguments")
             return
         settings.set_language(language)

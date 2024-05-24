@@ -24,10 +24,11 @@ def parse_input(user_input: str) -> Tuple[str, list[str]]:
 
 
 def main():
-    storage = FileStorage()
+    storage = FileStorage("addressbook.json")
     address_book = AddressBook(
         storage.load_contacts()
     )  # Load the address book from the file
+
     notes_book = NotesBook()
 
     init(autoreset=True)  # Initialize colorama
