@@ -1,28 +1,38 @@
-from colorama import init, Fore, Style
-from app.settings import Settings
-from infrastructure.storage import FileStorage
-from presentation.messages import Message
-from app.services import handle_command
-from app.entities import AddressBook, NotesBook
-import sys
 import os
-import difflib
-from typing import Tuple
-from prompt_toolkit import PromptSession
-from prompt_toolkit.completion import Completer, Completion
-from prompt_toolkit.document import Document
-from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
-from prompt_toolkit.formatted_text import HTML
+import sys
 
-# Add project root directory to sys.path
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 
+from typing import Tuple
+
+import difflib
+from colorama import Fore, Style, init
+from prompt_toolkit import PromptSession
+from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
+from prompt_toolkit.completion import Completer, Completion
+from prompt_toolkit.document import Document
+from prompt_toolkit.formatted_text import HTML
+
+
+from app.command_registry import command_registry
 from app.entities import AddressBook, NotesBook
+from app.interfaces import Command
 from app.services import handle_command
-from presentation.messages import Message
-from infrastructure.storage import FileStorage
 from app.settings import Settings
-from colorama import init, Fore, Style
+from infrastructure.storage import FileStorage
+from presentation.messages import Message
+
+
+
+
+class CommandCompleter(Completer):
+    def get_completions(self, document: Document, complete_event):
+        text = document.text_before_cursor
+        matches = difflib.get_close_matches(
+            text, command_registry.keys(), n=5, cutoff=0.1
+        )
+        for match in matches:
+            yield Completion(match, start_position=-len(text))
 
 def process_string(s: str) -> str:
     parts = s.split(' ', 1)
@@ -82,7 +92,7 @@ def main():
         completer=CommandCompleter(), auto_suggest=AutoSuggestFromHistory()
     )
 
-    while True:
+    while not Command.exit_command_flag:
         enter_command_prompt = Message.format_message("enter_command")
         user_input = session.prompt(
             HTML(f"<ansiyellow>{enter_command_prompt}</ansiyellow> ")
