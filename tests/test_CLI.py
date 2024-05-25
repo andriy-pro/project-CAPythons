@@ -7,15 +7,16 @@ import os
 # Додавання кореневої теки проекту до sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import src
-import src.presentation
-import src.presentation.cli
+import src.CAPythonsBook
+import src.CAPythonsBook.presentation
+import src.CAPythonsBook.presentation.cli
 
 class Test(unittest.TestCase):
 
     file_names=["test1"]
     directory="./tests/"
 
-    @unittest.skip("make refs")
+    #@unittest.skip("make refs")
     def tests_CLI_make_ref(self):
         for name in Test.file_names:
             self.CLI_make_ref(name)
@@ -27,7 +28,7 @@ class Test(unittest.TestCase):
         # Перенаправляем поток вывода stdout на файл
             sys.stdout = f
             #output=sys.stdout
-            src.presentation.cli.main()
+            src.CAPythonsBook.presentation.cli.main()
             #output=1 #sys.stdout
         sys.stdout = original_stdout    
         #print(type(output))
@@ -46,7 +47,7 @@ class Test(unittest.TestCase):
         # Перенаправляем поток вывода stdout на файл
             sys.stdout = f
             #output=sys.stdout
-            src.presentation.cli.main()
+            src.CAPythonsBook.presentation.cli.main()
             #output=1 #sys.stdout
         sys.stdout = original_stdout    
         #print(type(output))

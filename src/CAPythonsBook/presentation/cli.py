@@ -2,11 +2,15 @@ import sys
 import os
 from typing import Tuple
 
-from app.interfaces import Command
+# import src
+# import src.CAPythonsBook
+# import src.CAPythonsBook.app
+# import src.CAPythonsBook.app.interfaces
+
 
 # Add project root directory to sys.path
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
-
+from app.interfaces import Command
 from app.entities import AddressBook, NotesBook
 from app.services import handle_command
 from presentation.messages import Message
