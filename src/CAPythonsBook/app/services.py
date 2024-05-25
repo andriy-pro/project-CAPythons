@@ -102,12 +102,17 @@ class AddContactCommand(Command):
         name, phone = args
         record = self.book_type.find_by_name(Name(name))
         if record:
-            if any(p.value == phone for p in record.phones):
+            print(type(record.fields["phones"]))
+            print(record.fields["phones"])
+            if any(p.value == phone for p in record.fields["phones"]):
                 Message.warning("contact_exists", name=name, phone=phone)
             else:
-                current_phone = record.phones[0].value if record.phones else "No phone"
-                Message.warning("contact_exists", name=name,
-                                phone=current_phone)
+                if not record.fields.get("phones"):
+                    record.fields["phones"]=[]
+                record.fields["phones"].append(Phone(phone))
+                #current_phone = record.phones[0].value if record.phones else "No phone"
+                #Message.warning("contact_exists", name=name,
+                #                phone=current_phone)
         else:
             new_record = Record(Name(name))
             new_record.add_phone(Phone(phone))
