@@ -365,7 +365,6 @@ class DisplayNotesCommand(Command):
         self.book_type.display_notes()
 
 
-
 @register_command("exit")
 @register_command("close")
 class ExitCommand(Command):
@@ -379,8 +378,7 @@ class ExitCommand(Command):
         storage = FileStorage("addressbook.json")
         storage.save_contacts(self.book_type.data)
         Message.info("exit_message")
-        sys.exit()
-
+        Command.exit_command_flag = True  # sys.exit()
 
 @register_command("help")
 class HelpCommand(Command):
