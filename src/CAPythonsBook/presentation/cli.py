@@ -1,3 +1,9 @@
+from colorama import init, Fore, Style
+from app.settings import Settings
+from infrastructure.storage import FileStorage
+from presentation.messages import Message
+from app.services import handle_command
+from app.entities import AddressBook, NotesBook
 import sys
 import os
 from typing import Tuple
@@ -7,17 +13,25 @@ from app.interfaces import Command
 # Add project root directory to sys.path
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 
-from app.entities import AddressBook, NotesBook
-from app.services import handle_command
-from presentation.messages import Message
-from infrastructure.storage import FileStorage
-from app.settings import Settings
-from colorama import init, Fore, Style
+
+def process_string(s: str) -> str:
+    parts = s.split(' ', 1)
+    if len(parts) < 2:
+        return s
+
+    first_part = parts[0]
+    remaining_part = parts[1]
+    first_part_lower = first_part.lower()
+
+    result = f"{first_part_lower} {remaining_part}"
+    return result
 
 
 def parse_input(user_input: str) -> Tuple[str, list[str]]:
     """Parse the user input into a command and arguments."""
-    parts = user_input.lower().split()
+    # is_note = 'note' in user_input.split(" ")[0]
+    # parts = user_input.lower().split() if not is_note else process_string(user_input).split()
+    parts = process_string(user_input).split()
     command = parts[0] if parts else ""
     args = parts[1:] if len(parts) > 1 else []
     return command, args
@@ -48,7 +62,8 @@ def main():
     print(f"{Fore.GREEN}{banner_part_1}{Style.RESET_ALL}")
     print()
     print(
-        f"{Fore.CYAN}{Style.BRIGHT}Welcome to the Assistant Bot ver. 2.3 !{Style.RESET_ALL}"
+        f"{Fore.CYAN}{Style.BRIGHT}Welcome to the Assistant Bot ver. 2.3 !{
+            Style.RESET_ALL}"
     )
     print()
 
