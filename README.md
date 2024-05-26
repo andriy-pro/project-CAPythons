@@ -235,23 +235,7 @@ def some_function():
         logger.error("An error occurred: %s", e)
 ```
 
-7. **Використання парсингу аргументів командного рядка**
-
-Для обробки аргументів командного рядка варто використовувати бібліотеки на кшталт `argparse`, які забезпечують зручний інтерфейс для роботи з параметрами командного рядка.
-
-Приклад:
-```python
-import argparse
-
-parser = argparse.ArgumentParser(description="Contact Manager")
-parser.add_argument("command", help="Command to execute")
-parser.add_argument("arguments", nargs="*", help="Arguments for the command")
-
-args = parser.parse_args()
-print(args.command, args.arguments)
-```
-
-8. **Використання `dataclass` для спрощення класів**
+7. **Використання `dataclass` для спрощення класів**
 
 Бібліотека `dataclasses` спрощує створення класів для зберігання даних і автоматично генерує методи, такі як `__init__`, `__repr__`, та інші.
 
@@ -271,7 +255,7 @@ class Contact:
 
 ### Низький пріоритет
 
-9. **Використання абстрактних класів та інтерфейсів**
+8. **Використання абстрактних класів та інтерфейсів**
 
 Використання абстрактних класів для визначення інтерфейсів команд полегшує розширюваність функціоналу шляхом додавання нових класів, які наслідують ці інтерфейси.
 
@@ -291,7 +275,7 @@ class FieldCommand(Command, ABC):
         pass
 ```
 
-10. **Використання Dependency Injection**
+9. **Використання Dependency Injection**
 
 Для полегшення тестування та підвищення гнучкості коду можна впровадити паттерн "впровадження залежностей" (Dependency Injection).
 
@@ -310,7 +294,7 @@ storage = Storage()
 contact_manager = ContactManager(storage)
 ```
 
-### Відхилені патерни
+### Випробувані та відхилені патерни
 
 #### Паттерн "Фабричний метод" (Factory Method)
 
